@@ -87,6 +87,9 @@ func (s *Server) Start() error {
 	mux.HandleFunc("/debug/pprof/trace", http.DefaultServeMux.ServeHTTP)
 	mux.HandleFunc("/debug/pprof/heap", http.DefaultServeMux.ServeHTTP)
 
+	// Start target collectors in the background
+	go s.runTargetCollectors()
+
 	// Create HTTP server
 	s.server = &http.Server{
 		Handler:      handler,
@@ -107,6 +110,79 @@ func (s *Server) Stop(ctx context.Context) error {
 	s.logger.Info("Stopping iperf3 exporter")
 
 	return s.server.Shutdown(ctx)
+}
+
+// runTargetCollectors runs all configured target collectors continuously.
+// Each target collector runs on its own interval as specified in the Interval field.
+// This method runs forever in a goroutine.
+func (s *Server) runTargetCollectors() {
+	if len(s.config.Targets) == 0 {
+		s.logger.Info("No targets configured, skipping target collectors")
+		return
+	}
+
+	s.logger.Info("Starting target collectors", "target_count", len(s.config.Targets))
+
+	// Create a goroutine for each target
+	for _, targetConfig := range s.config.Targets {
+		go s.runTargetCollector(targetConfig)
+	}
+}
+
+// runTargetCollector runs a single target collector on its configured interval forever.
+func (s *Server) runTargetCollector(targetConfig collector.TargetConfig) {
+	s.logger.Info("Target collector started", "target", targetConfig.Target, "port", targetConfig.Port, "interval", targetConfig.Interval)
+
+	// Create a ticker with the target's interval
+	ticker := time.NewTicker(targetConfig.Interval)
+	defer ticker.Stop()
+
+	// Run the collector immediately on startup
+	s.executeTargetCollector(targetConfig)
+
+	// Then run it on the interval
+	for range ticker.C {
+		s.executeTargetCollector(targetConfig)
+	}
+}
+
+// executeTargetCollector executes the collector for a single target and records metrics.
+func (s *Server) executeTargetCollector(targetConfig collector.TargetConfig) {
+	start := time.Now()
+
+	// Create a dedicated registry for this target
+	registry := prometheus.NewRegistry()
+
+	// Create collector with target configuration
+	c := collector.NewCollector(targetConfig, s.logger)
+	if err := registry.Register(c); err != nil {
+		s.logger.Error("Failed to register collector for target", 
+			"target", targetConfig.Target, 
+			"port", targetConfig.Port, 
+			"error", err)
+		collector.IperfErrors.Inc()
+		return
+	}
+
+	// Collect metrics
+	metrics, err := registry.Gather()
+	if err != nil {
+		s.logger.Error("Failed to gather metrics from collector",
+			"target", targetConfig.Target,
+			"port", targetConfig.Port,
+			"error", err)
+		collector.IperfErrors.Inc()
+		return
+	}
+
+	duration := time.Since(start).Seconds()
+	collector.IperfDuration.Observe(duration)
+
+	s.logger.Debug("Target collector executed",
+		"target", targetConfig.Target,
+		"port", targetConfig.Port,
+		"duration_seconds", duration,
+		"metric_count", len(metrics))
 }
 
 // probeHandler handles requests to the /probe endpoint.
@@ -354,3 +430,4 @@ func (rw *responseWriter) WriteHeader(code int) {
 	rw.statusCode = code
 	rw.ResponseWriter.WriteHeader(code)
 }
+
