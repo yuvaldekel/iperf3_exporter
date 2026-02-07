@@ -129,7 +129,7 @@ func LoadConfig() *Config {
 func parseFlags(cfg *ConfigFile) string {
 
 	// Define command-line flags
-	ConfigFilePath := kingpin.Flag("config", "Path to the configuration file").
+	configFilePath := kingpin.Flag("config", "Path to the configuration file").
         Envar("IPERF3_EXPORTER_CONFIG_FILE").
         Default("config.yaml")
 
@@ -149,9 +149,11 @@ func parseFlags(cfg *ConfigFile) string {
 		Default(cfg.Timeout.String()).DurationVar(&cfg.Timeout)
 
 	kingpin.Flag("log-level", "Only log messages with the given severity or above. One of: [debug, info, warn, error]").
+        Envar("IPERF3_EXPORTER_LOG_LEVEL").
 		Default("info").StringVar(&cfg.Logging.Level)
 
 	kingpin.Flag("log-format", "Output format of log messages. One of: [logfmt, json]").
+		Envar("IPERF3_EXPORTER_LOG_FORMAT").
 		Default("logfmt").StringVar(&cfg.Logging.Format)
 
 	// Version information
@@ -160,7 +162,7 @@ func parseFlags(cfg *ConfigFile) string {
 
 	kingpin.Parse()
 
-	return ConfigFilePath.String()
+	return configFilePath.String()
 }
 
 // loadConfigFromFile loads the configuration from the specified file path into the provided Config struct.
