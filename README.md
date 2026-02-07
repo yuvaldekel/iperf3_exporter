@@ -82,14 +82,14 @@ iPerf3 exporter is configured via command-line flags:
 | `--web.telemetry-path` | Path under which to expose metrics | `/metrics` |
 | `--web.probe-path` | Path under which to expose the probe endpoint | `/probe` |
 | `--iperf3.timeout` | iperf3 run timeout | `30s` |
-| `--web.config.file` | Path to configuration file that can enable TLS or authentication | |
+| `--config` | Path to configuration file that can enable TLS or authentication | |
 | `--web.systemd-socket` | Use systemd socket activation listeners instead of port listeners (Linux only) | `false` |
 | `--log.level` | Only log messages with the given severity or above | `info` |
 | `--log.format` | Output format of log messages | `logfmt` |
 
 #### Web Configuration File
 
-The exporter supports a configuration file for TLS and authentication settings. This file is specified with the `--web.config.file` flag.
+The exporter supports a configuration file for TLS and authentication settings. This file is specified with the `--config` flag.
 
 Example configuration file:
 
@@ -139,7 +139,7 @@ When making requests to the `/probe` endpoint, the following parameters can be u
 | `target` | Target host to probe (required) | - |
 | `port` | Port that the target iperf3 server is listening on | 5201 |
 | `reverse_mode` | Run iperf3 in reverse mode (server sends, client receives) | false |
-| `udp_mode` | Run iperf3 in UDP mode instead of TCP | false |
+| `protocol` | Run iperf3 in UDP or TCP protocol | TCP |
 | `bitrate` | Target bitrate in bits/sec (format: #[KMG][/#]). For UDP mode, iperf3 defaults to 1 Mbit/sec if not specified. | - |
 | `period` | Duration of the iperf3 test | 5s |
 | `bind` | Bind to a specific local IP address or interface | - |
