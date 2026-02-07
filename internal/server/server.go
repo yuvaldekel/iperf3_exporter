@@ -253,7 +253,7 @@ func (s *Server) probeHandler(w http.ResponseWriter, r *http.Request) {
 	registry := prometheus.NewRegistry()
 
 	// Create collector with probe configuration
-	probeConfig := collector.ProbeConfig{
+	TargetConfig := collector.TargetConfig{
 		Target:      target,
 		Port:        targetPort,
 		Period:      runPeriod,
@@ -264,7 +264,7 @@ func (s *Server) probeHandler(w http.ResponseWriter, r *http.Request) {
 		Bind:        bind,
 	}
 
-	c := collector.NewCollector(probeConfig, s.logger)
+	c := collector.NewCollector(TargetConfig, s.logger)
 	registry.MustRegister(c)
 
 	// Delegate http serving to Prometheus client library, which will call collector.Collect.

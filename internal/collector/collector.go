@@ -45,16 +45,17 @@ var (
 	)
 )
 
-// ProbeConfig represents the configuration for a single probe.
-type ProbeConfig struct {
-	Target      string 			`yaml:"target" json:"target"`
-	Port        int				`yaml:"port" json:"port"`
-	Period      time.Duration	`yaml:"period" json:"period"`
-	Timeout     time.Duration	`yaml:"timeout" json:"timeout"`
-	ReverseMode bool			`yaml:"reverseMode" json:"reverse_mode"`
-	Protocol    string			`yaml:"protocol" json:"protocol"`
-	Bitrate     string			`yaml:"bitrate" json:"bitrate"`
-	Bind        string			`yaml:"bind" json:"bind"`
+// TargetConfig represents the configuration for a single probe.
+type TargetConfig struct {
+	Target      string 			`yaml:"target" json:"target"            validate:"required,hostname|ip"`
+	Port        int				`yaml:"port" json:"port"                validate:"default=5201,min=1,max=65535"`
+	Period      time.Duration	`yaml:"period" json:"period"			validate:"time_duration,default=5s"`
+	Timeout     time.Duration	`yaml:"timeout" json:"timeout"			validate:"time_duration,default=30s"`
+	ReverseMode bool			`yaml:"reverseMode" json:"reverse_mode" validate:"default=false"`
+	Protocol    string			`yaml:"protocol" json:"protocol"	 	validate:"omitempty,oneof=tcp udp"`
+	Bitrate     string			`yaml:"bitrate" json:"bitrate"			validate:"bitrate,default=1Mbit/s"`
+	Bind        string			`yaml:"bind" json:"bind"				validate:"omitempty,ip"`
+	Interval   time.Duration	`yaml:"interval" json:"interval"		validate:"default=3600s"`
 }
 
 // Collector implements the prometheus.Collector interface for iperf3 metrics.
@@ -91,12 +92,12 @@ type Collector struct {
 }
 
 // NewCollector creates a new Collector for iperf3 metrics.
-func NewCollector(config ProbeConfig, logger *slog.Logger) *Collector {
+func NewCollector(config TargetConfig, logger *slog.Logger) *Collector {
 	return NewCollectorWithRunner(config, logger, iperf.NewRunner(logger))
 }
 
 // NewCollectorWithRunner creates a new Collector for iperf3 metrics with a custom runner.
-func NewCollectorWithRunner(config ProbeConfig, logger *slog.Logger, runner iperf.Runner) *Collector {
+func NewCollectorWithRunner(config TargetConfig, logger *slog.Logger, runner iperf.Runner) *Collector {
 	// Common labels for all metrics
 	labels := []string{"target", "port", "protocol", "reverse"}
 

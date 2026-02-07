@@ -1,4 +1,4 @@
-module github.com/edgard/iperf3_exporter
+module github.com/yuvaldekel/iperf3_exporter
 
 go 1.24.11
 

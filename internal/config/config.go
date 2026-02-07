@@ -31,16 +31,16 @@ import (
 
 // Config represents the configuration file for the iperf3_exporter.
 type ConfigFile struct {
-	ListenAddress string 		  		  `yaml:"listenAddress" json:"listen_address"`
-	MetricsPath   string		  		  `yaml:"metricsPath" json:"metrics_path"`
-	ProbePath     string		  		  `yaml:"probePath" json:"probe_path"`
-	Timeout       time.Duration	  		  `yaml:"timeout" json:"timeout"`
-	Targets 	  []collector.ProbeConfig `yaml:"targets" json:"targets"` 
+	ListenAddress string 		  		   `yaml:"listenAddress" json:"listen_address"`
+	MetricsPath   string		  		   `yaml:"metricsPath" json:"metrics_path"`
+	ProbePath     string		  		   `yaml:"probePath" json:"probe_path"`
+	Timeout       time.Duration	  		   `yaml:"timeout" json:"timeout"`
+	Targets 	  []collector.TargetConfig `yaml:"targets" json:"targets" default:"[]"` 
 	// Logging configuration for the exporter
 	Logging	struct {
-		Level 	  string				  `yaml:"level" json:"level"`
-		Format	  string				  `yaml:"format" json:"format"`
-	} 									  `yaml:"logging"`
+		Level 	  string				   `yaml:"level" json:"level"`
+		Format	  string				   `yaml:"format" json:"format"`
+	} 									   `yaml:"logging"`
 }
 
 // Config represents the runtime configuration for the iperf3_exporter.
@@ -49,7 +49,7 @@ type Config struct {
 	MetricsPath   string		  	
 	ProbePath     string		  	
 	Timeout       time.Duration	  	
-	Targets 	  []collector.ProbeConfig 
+	Targets 	  []collector.TargetConfig 
 	Logger        *slog.Logger
 	WebConfig     *web.FlagConfig
 }
@@ -61,6 +61,14 @@ func newConfig() *ConfigFile {
 		MetricsPath:   "/metrics",
 		ProbePath:     "/probe",
 		Timeout:       30 * time.Second,
+		Targets: 	  []collector.TargetConfig{},
+		Logging: struct {
+			Level  string `yaml:"level" json:"level"`
+			Format string `yaml:"format" json:"format"`
+		}{
+			Level:  "info",
+			Format: "logfmt",
+		},
 	}
 }
 
@@ -135,8 +143,7 @@ func parseFlags(cfg *ConfigFile) string {
 
 	kingpin.Flag("listen-address", "Port to listen on").
         Envar("IPERF3_EXPORTER_PORT").
-        Default(cfg.ListenAddress).
-        StringVar(&cfg.ListenAddress)
+        Default(cfg.ListenAddress).StringVar(&cfg.ListenAddress)
 
 	kingpin.Flag("metrics-path", "Path under which to expose metrics.").
 		Default(cfg.MetricsPath).StringVar(&cfg.MetricsPath)
@@ -150,11 +157,11 @@ func parseFlags(cfg *ConfigFile) string {
 
 	kingpin.Flag("log-level", "Only log messages with the given severity or above. One of: [debug, info, warn, error]").
         Envar("IPERF3_EXPORTER_LOG_LEVEL").
-		Default("info").StringVar(&cfg.Logging.Level)
+		Default(cfg.Logging.Level).StringVar(&cfg.Logging.Level)
 
 	kingpin.Flag("log-format", "Output format of log messages. One of: [logfmt, json]").
 		Envar("IPERF3_EXPORTER_LOG_FORMAT").
-		Default("logfmt").StringVar(&cfg.Logging.Format)
+		Default(cfg.Logging.Format).StringVar(&cfg.Logging.Format)
 
 	// Version information
 	kingpin.Version(version.Print("iperf3_exporter"))
