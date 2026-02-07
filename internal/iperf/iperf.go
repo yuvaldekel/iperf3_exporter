@@ -67,6 +67,7 @@ type Result struct {
 	ReceivedSeconds       float64
 	ReceivedBytes         float64
 	ReceivedBitsPerSecond float64
+	Protocol              string
 	// TCP-specific fields
 	Retransmits float64
 	// UDP-specific fields
@@ -78,7 +79,6 @@ type Result struct {
 	ReceivedJitter      float64
 	ReceivedLostPackets float64
 	ReceivedLostPercent float64
-	UDPMode             bool
 	Error               error
 }
 
@@ -133,7 +133,7 @@ type Config struct {
 	Period      time.Duration
 	Timeout     time.Duration
 	ReverseMode bool
-	UDPMode     bool
+	Protocol    string
 	Bitrate     string
 	Bind        string
 	Logger      *slog.Logger
@@ -189,20 +189,20 @@ func (r *DefaultRunner) Run(ctx context.Context, cfg Config) Result {
 		iperfArgs = append(iperfArgs, "-R")
 	}
 
-	if cfg.UDPMode {
+	if cfg.Protocol == "udp" {
 		iperfArgs = append(iperfArgs, "-u")
 	}
 
 	// Apply bitrate:
 	// - For UDP: use specified bitrate or default to "1M" if none specified (iperf3 defaults to 1Mbps for UDP)
 	// - For TCP: only apply if explicitly specified (iperf3 defaults to unlimited for TCP)
-	if cfg.UDPMode {
+	if cfg.Protocol {
 		if cfg.Bitrate != "" {
 			iperfArgs = append(iperfArgs, "-b", cfg.Bitrate)
 		} else {
 			// Default to 1Mbps for UDP if not specified
 			iperfArgs = append(iperfArgs, "-b", "1M")
-			cfg.Logger.Debug("Using default 1Mbps bitrate for UDP mode")
+			cfg.Logger.Debug("Using default 1Mbps bitrate using UDP protocol")
 		}
 	} else if cfg.Bitrate != "" {
 		// Only apply bitrate for TCP if explicitly specified
@@ -228,7 +228,7 @@ func (r *DefaultRunner) Run(ctx context.Context, cfg Config) Result {
 		"port", cfg.Port,
 		"period", cfg.Period,
 		"reverse", cfg.ReverseMode,
-		"udp", cfg.UDPMode,
+		"protocol", cfg.Protocol,
 		"bitrate", cfg.Bitrate,
 		"bind", cfg.Bind,
 	)
@@ -266,12 +266,12 @@ func (r *DefaultRunner) Run(ctx context.Context, cfg Config) Result {
 		return result
 	}
 
-	// Set UDPMode based on user configuration
-	result.UDPMode = cfg.UDPMode
+	// Set UDP based on user configuration
+	result.Protocol = cfg.Protocol
 	result.Success = true
 
-	// Handle different metrics based on the protocol mode
-	if !cfg.UDPMode {
+	// Handle different metrics based on the protocol
+	if cfg.Protocol == "tcp" {
 		// TCP Mode - use TCP-specific JSON fields
 		result.SentSeconds = raw.End.SumSent.Seconds
 		result.SentBytes = raw.End.SumSent.Bytes
@@ -280,7 +280,7 @@ func (r *DefaultRunner) Run(ctx context.Context, cfg Config) Result {
 		result.ReceivedBytes = raw.End.SumReceived.Bytes
 		result.ReceivedBitsPerSecond = raw.End.SumReceived.BitsPerSecond
 		result.Retransmits = raw.End.SumSent.Retransmits
-	} else if cfg.UDPMode {
+	} else {
 		// UDP Mode - use UDP-specific JSON fields from streams[0].udp and sum
 		// Add boundary check before accessing Streams[0]
 		if len(raw.End.Streams) > 0 {
@@ -321,7 +321,7 @@ func (r *DefaultRunner) Run(ctx context.Context, cfg Config) Result {
 	}
 
 	// Enhanced logging with protocol-specific metrics
-	if cfg.UDPMode {
+	if cfg.Protocol == "udp" {
 		cfg.Logger.Debug("iperf3 UDP test completed successfully",
 			"target", cfg.Target,
 			"sent_bps", result.SentBitsPerSecond,

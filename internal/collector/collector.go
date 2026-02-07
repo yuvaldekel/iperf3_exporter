@@ -52,24 +52,24 @@ type ProbeConfig struct {
 	Period      time.Duration
 	Timeout     time.Duration
 	ReverseMode bool
-	UDPMode     bool
+	Protocol    string
 	Bitrate     string
 	Bind        string
 }
 
 // Collector implements the prometheus.Collector interface for iperf3 metrics.
 type Collector struct {
-	target  string
-	port    int
-	period  time.Duration
-	timeout time.Duration
-	mutex   sync.RWMutex
-	reverse bool
-	udpMode bool
-	bitrate string
-	bind    string
-	logger  *slog.Logger
-	runner  iperf.Runner
+	target   string
+	port     int
+	period   time.Duration
+	timeout  time.Duration
+	mutex    sync.RWMutex
+	reverse  bool
+	protocol string
+	bitrate  string
+	bind     string
+	logger   *slog.Logger
+	runner   iperf.Runner
 
 	// Metrics
 	up              *prometheus.Desc
@@ -101,16 +101,16 @@ func NewCollectorWithRunner(config ProbeConfig, logger *slog.Logger, runner iper
 	labels := []string{"target", "port"}
 
 	return &Collector{
-		target:  config.Target,
-		port:    config.Port,
-		period:  config.Period,
-		timeout: config.Timeout,
-		reverse: config.ReverseMode,
-		udpMode: config.UDPMode,
-		bitrate: config.Bitrate,
-		bind:    config.Bind,
-		logger:  logger,
-		runner:  runner,
+		target:   config.Target,
+		port:     config.Port,
+		period:   config.Period,
+		timeout:  config.Timeout,
+		reverse:  config.ReverseMode,
+		protocol: config.Protocol,
+		bitrate:  config.Bitrate,
+		bind:     config.Bind,
+		logger:   logger,
+		runner:   runner,
 
 		// Define metrics with labels
 		up: prometheus.NewDesc(
@@ -152,7 +152,7 @@ func NewCollectorWithRunner(config ProbeConfig, logger *slog.Logger, runner iper
 		),
 		sentJitter: prometheus.NewDesc(
 			prometheus.BuildFQName(namespace, "", "sent_jitter_ms"),
-			"Jitter in milliseconds for sent packets in UDP mode.",
+			"Jitter in milliseconds for sent packets in UDP.",
 			labels, nil,
 		),
 		sentLostPackets: prometheus.NewDesc(
@@ -172,7 +172,7 @@ func NewCollectorWithRunner(config ProbeConfig, logger *slog.Logger, runner iper
 		),
 		recvJitter: prometheus.NewDesc(
 			prometheus.BuildFQName(namespace, "", "received_jitter_ms"),
-			"Jitter in milliseconds for received packets in UDP mode.",
+			"Jitter in milliseconds for received packets in UDP.",
 			labels, nil,
 		),
 		recvLostPackets: prometheus.NewDesc(
@@ -226,7 +226,7 @@ func (c *Collector) Collect(ch chan<- prometheus.Metric) {
 		Period:      c.period,
 		Timeout:     c.timeout,
 		ReverseMode: c.reverse,
-		UDPMode:     c.udpMode,
+		Protocol:    c.protocol,
 		Bitrate:     c.bitrate,
 		Bind:        c.bind,
 		Logger:      c.logger,
@@ -243,13 +243,13 @@ func (c *Collector) Collect(ch chan<- prometheus.Metric) {
 		ch <- prometheus.MustNewConstMetric(c.receivedSeconds, prometheus.GaugeValue, result.ReceivedSeconds, labelValues...)
 		ch <- prometheus.MustNewConstMetric(c.receivedBytes, prometheus.GaugeValue, result.ReceivedBytes, labelValues...)
 
-		// Retransmits is only relevant in TCP mode
-		if !result.UDPMode {
+		// Retransmits is only relevant in TCP protocol
+		if result.Protocol == "tcp" {
 			ch <- prometheus.MustNewConstMetric(c.retransmits, prometheus.GaugeValue, result.Retransmits, labelValues...)
 		}
 
-		// Include UDP-specific metrics when in UDP mode
-		if result.UDPMode {
+		// Include UDP-specific metrics when in UDP protocol
+		if result.Protocol == "udp" {
 			ch <- prometheus.MustNewConstMetric(c.sentPackets, prometheus.GaugeValue, result.SentPackets, labelValues...)
 			ch <- prometheus.MustNewConstMetric(c.sentJitter, prometheus.GaugeValue, result.SentJitter, labelValues...)
 			ch <- prometheus.MustNewConstMetric(c.sentLostPackets, prometheus.GaugeValue, result.SentLostPackets, labelValues...)
@@ -267,8 +267,8 @@ func (c *Collector) Collect(ch chan<- prometheus.Metric) {
 		ch <- prometheus.MustNewConstMetric(c.receivedSeconds, prometheus.GaugeValue, 0, labelValues...)
 		ch <- prometheus.MustNewConstMetric(c.receivedBytes, prometheus.GaugeValue, 0, labelValues...)
 
-		// Only include mode-specific metrics for the active mode
-		if !result.UDPMode {
+		// Only include TCP-specific metrics for the active mode
+		if result.Protocol == "tcp" {
 			// TCP-specific metrics on failure
 			ch <- prometheus.MustNewConstMetric(c.retransmits, prometheus.GaugeValue, 0, labelValues...)
 		} else {
