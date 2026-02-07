@@ -21,14 +21,14 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/edgard/iperf3_exporter/internal/config"
-	"github.com/edgard/iperf3_exporter/internal/iperf"
-	"github.com/edgard/iperf3_exporter/internal/server"
+	"github.com/yuvaldekel/iperf3_exporter/internal/config"
+	"github.com/yuvaldekel/iperf3_exporter/internal/iperf"
+	"github.com/yuvaldekel/iperf3_exporter/internal/server"
 )
 
 func main() {
 	// Parse command line flags
-	cfg := config.ParseFlags()
+	cfg := config.LoadConfig()
 
 	// Log version and build information
 	cfg.Logger.Info("Starting iperf3 exporter")

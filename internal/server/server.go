@@ -23,9 +23,9 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/edgard/iperf3_exporter/internal/collector"
-	"github.com/edgard/iperf3_exporter/internal/config"
-	"github.com/edgard/iperf3_exporter/internal/iperf"
+	"github.com/yuvaldekel/iperf3_exporter/internal/collector"
+	"github.com/yuvaldekel/iperf3_exporter/internal/config"
+	"github.com/yuvaldekel/iperf3_exporter/internal/iperf"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/collectors"
 	versioncollector "github.com/prometheus/client_golang/prometheus/collectors/version"

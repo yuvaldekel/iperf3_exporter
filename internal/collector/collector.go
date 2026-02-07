@@ -21,7 +21,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/edgard/iperf3_exporter/internal/iperf"
+	"github.com/yuvaldekel/iperf3_exporter/internal/iperf"
 	"github.com/prometheus/client_golang/prometheus"
 )
 
@@ -47,14 +47,14 @@ var (
 
 // ProbeConfig represents the configuration for a single probe.
 type ProbeConfig struct {
-	Target      string
-	Port        int
-	Period      time.Duration
-	Timeout     time.Duration
-	ReverseMode bool
-	Protocol    string
-	Bitrate     string
-	Bind        string
+	Target      string 			`yaml:"target" json:"target"`
+	Port        int				`yaml:"port" json:"port"`
+	Period      time.Duration	`yaml:"period" json:"period"`
+	Timeout     time.Duration	`yaml:"timeout" json:"timeout"`
+	ReverseMode bool			`yaml:"reverseMode" json:"reverse_mode"`
+	Protocol    string			`yaml:"protocol" json:"protocol"`
+	Bitrate     string			`yaml:"bitrate" json:"bitrate"`
+	Bind        string			`yaml:"bind" json:"bind"`
 }
 
 // Collector implements the prometheus.Collector interface for iperf3 metrics.
