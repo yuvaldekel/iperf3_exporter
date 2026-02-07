@@ -98,7 +98,7 @@ func NewCollector(config ProbeConfig, logger *slog.Logger) *Collector {
 // NewCollectorWithRunner creates a new Collector for iperf3 metrics with a custom runner.
 func NewCollectorWithRunner(config ProbeConfig, logger *slog.Logger, runner iperf.Runner) *Collector {
 	// Common labels for all metrics
-	labels := []string{"target", "port"}
+	labels := []string{"target", "port", "protocol", "reverse"}
 
 	return &Collector{
 		target:   config.Target,
