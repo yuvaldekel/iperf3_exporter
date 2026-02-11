@@ -29,7 +29,10 @@ import (
 	"github.com/prometheus/exporter-toolkit/web"
 	"github.com/go-playground/validator/v10"
 )
-
+const (
+	// defaultTimeout is the default timeout for iperf3 tests when no timeout is configured.
+	defaultTimeout = 30.0
+)
 
 // Config represents the configuration file for the iperf3_exporter.
 type ConfigFile struct {
@@ -203,6 +206,9 @@ func loadConfigFromFile(path string, cfg *ConfigFile) error {
         }
         if cfg.Targets[i].Interval == 0 {
             cfg.Targets[i].Interval = 3600 * time.Second
+        }
+        if cfg.Targets[i].Timeout == 0 {
+            cfg.Targets[i].Interval = defaultTimeout * time.Second
         }
 	}
 
