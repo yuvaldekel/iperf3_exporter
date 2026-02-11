@@ -47,15 +47,15 @@ var (
 
 // TargetConfig represents the configuration for a single probe.
 type TargetConfig struct {
-	Target      string 			`yaml:"target" json:"target"            validate:"required,hostname|ip"`
-	Port        int				`yaml:"port" json:"port"                validate:"default=5201,min=1,max=65535"`
-	Period      time.Duration	`yaml:"period" json:"period"			validate:"time_duration,default=5s"`
-	Timeout     time.Duration	`yaml:"timeout" json:"timeout"			validate:"time_duration,default=30s"`
-	ReverseMode bool			`yaml:"reverseMode" json:"reverse_mode" validate:"default=false"`
-	Protocol    string			`yaml:"protocol" json:"protocol"	 	validate:"oneof=tcp udp,default=tcp"`
-	Bitrate     string			`yaml:"bitrate" json:"bitrate"			validate:"bitrate,default=1Mbit/s"`
-	Bind        string			`yaml:"bind" json:"bind"				validate:"omitempty,ip"`
-	Interval   time.Duration	`yaml:"interval" json:"interval"		validate:"default=3600s"`
+	Target      string 			`yaml:"target"      validate:"required,hostname|ip"`
+	Port        int				`yaml:"port"        validate:"default=5201,min=1,max=65535"`
+	Period      time.Duration	`yaml:"period" 	    validate:"time_duration,default=5s"`
+	Timeout     time.Duration	`yaml:"timeout" 	validate:"time_duration,default=30s"`
+	ReverseMode bool			`yaml:"reverseMode" validate:"default=false"`
+	Protocol    string			`yaml:"protocol"    validate:"oneof=tcp udp,default=tcp"`
+	Bitrate     string			`yaml:"bitrate"     validate:"bitrate,default=1Mbit/s"`
+	Bind        string			`yaml:"bind"  		validate:"omitempty,ip"`
+	Interval   time.Duration	`yaml:"interval" 	validate:"time_duration,default=3600s"`
 }
 
 // Collector implements the prometheus.Collector interface for iperf3 metrics.
