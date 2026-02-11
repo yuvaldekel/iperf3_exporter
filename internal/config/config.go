@@ -190,6 +190,10 @@ func loadConfigFromFile(path string, cfg *ConfigFile) error {
 		return errors.New("error unmarshaling config file: " + err.Error())
 	}
 
+	if err := validate.Struct(cfg); err != nil {
+        return errors.New("config validation failed: " + err.Error())
+    }
+
 	return nil
 }
 
