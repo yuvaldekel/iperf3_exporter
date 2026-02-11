@@ -87,7 +87,7 @@ func LoadConfig() *Config {
 	webConfig := &web.FlagConfig{
         WebListenAddresses: &[]string{":" + configFile.ListenAddress},
         WebSystemdSocket:   new(bool),
-        WebConfigFile:      &configPath,
+        WebConfigFile:      new(string),
     }
 
 	// Initialize logger
