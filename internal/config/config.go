@@ -20,10 +20,10 @@ import (
 	"log"
 	"os"
 	"time"
-	"strings"
 
 	"gopkg.in/yaml.v3"
 	"github.com/yuvaldekel/iperf3_exporter/internal/collector"
+	"github.com/yuvaldekel/iperf3_exporter/internal/iperf"
 	"github.com/alecthomas/kingpin/v2"
 	"github.com/prometheus/common/version"
 	"github.com/prometheus/exporter-toolkit/web"
@@ -208,8 +208,8 @@ func loadConfigFromFile(path string, cfg *ConfigFile) error {
 
 	var validate = validator.New()
 	validate.RegisterValidation("bitrate", func(fl validator.FieldLevel) bool {
-    	val := fl.Field().String()
-    	return strings.HasSuffix(val, "Mbit/s") || strings.HasSuffix(val, "Gbit/s")
+		val := fl.Field().String()
+		return iperf.ValidateBitrate(val)
     })
 
 	if err := validate.Struct(cfg); err != nil {

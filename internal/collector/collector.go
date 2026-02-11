@@ -53,8 +53,8 @@ type TargetConfig struct {
     Timeout     time.Duration   `yaml:"timeout"     validate:"required,gt=0"`
     ReverseMode bool            `yaml:"reverseMode"`
     Protocol    string          `yaml:"protocol"    validate:"required,oneof=tcp udp"`
-    Bitrate     string          `yaml:"bitrate"     validate:"required,bitrate"` 
-    Bind        string          `yaml:"bind"        validate:"omitempty,ip"`
+    Bitrate     string          `yaml:"bitrate"     validate:"bitrate"` 
+    Bind        string          `yaml:"bind"        validate:"ip"`
     Interval    time.Duration   `yaml:"interval"    validate:"required,gt=0"`
 }
 
