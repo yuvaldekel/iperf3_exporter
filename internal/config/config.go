@@ -17,7 +17,7 @@ package config
 import (
 	"errors"
 	"log/slog"
-	"log/Fatalf"
+	"log"
 	"os"
 	"time"
 
@@ -79,7 +79,7 @@ func LoadConfig() *Config {
 
 	// Load configuration from file if specified
 	if err := loadConfigFromFile(configPath, configFile); err != nil {
-		Fatalf("Error loading configuration from file: %v", err)
+		log.Fatalf("Error loading configuration from file: %v", err)
 	}
 
 	// Create web configuration for the exporter
