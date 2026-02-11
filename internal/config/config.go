@@ -190,6 +190,12 @@ func loadConfigFromFile(path string, cfg *ConfigFile) error {
 		return errors.New("error unmarshaling config file: " + err.Error())
 	}
 
+	var validate = validator.New()
+	validate.RegisterValidation("bitrate", func(fl validator.FieldLevel) bool {
+    	val := fl.Field().String()
+    	return strings.HasSuffix(val, "Mbit/s") || strings.HasSuffix(val, "Gbit/s")
+    })
+
 	if err := validate.Struct(cfg); err != nil {
         return errors.New("config validation failed: " + err.Error())
     }
