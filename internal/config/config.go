@@ -208,7 +208,7 @@ func loadConfigFromFile(path string, cfg *ConfigFile) error {
             cfg.Targets[i].Interval = 3600 * time.Second
         }
         if cfg.Targets[i].Timeout == 0 {
-            cfg.Targets[i].Interval = defaultTimeout * time.Second
+            cfg.Targets[i].Timeout = defaultTimeout * time.Second
         }
 	}
 
