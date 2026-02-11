@@ -234,8 +234,13 @@ func (c *Collector) Collect(ch chan<- prometheus.Metric) {
 	})
 
 	// Common label values for all metrics
-	labelValues := []string{c.target, strconv.Itoa(c.port)}
-
+	labelValues := []string{
+		c.target, 
+		strconv.Itoa(c.port), 
+		c.protocol, 
+		strconv.FormatBool(c.reverse),
+	}
+	
 	// Set metrics based on result
 	if result.Success {
 		ch <- prometheus.MustNewConstMetric(c.up, prometheus.GaugeValue, 1, labelValues...)
