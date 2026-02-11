@@ -133,6 +133,7 @@ func (s *Server) runTargetCollectors() {
 func (s *Server) runTargetCollector(targetConfig collector.TargetConfig) {
 	s.logger.Info("Target collector started", "target", targetConfig.Target, "port", targetConfig.Port, "interval", targetConfig.Interval)
 
+	s.logger.Info(targetConfig.Interval)
 	// Create a ticker with the target's interval
 	ticker := time.NewTicker(targetConfig.Interval)
 	defer ticker.Stop()
