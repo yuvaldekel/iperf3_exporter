@@ -26,6 +26,7 @@ import (
 	"github.com/alecthomas/kingpin/v2"
 	"github.com/prometheus/common/version"
 	"github.com/prometheus/exporter-toolkit/web"
+	"github.com/go-playground/validator/v10"
 )
 
 
