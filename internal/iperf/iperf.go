@@ -196,7 +196,7 @@ func (r *DefaultRunner) Run(ctx context.Context, cfg Config) Result {
 	// Apply bitrate:
 	// - For UDP: use specified bitrate or default to "1M" if none specified (iperf3 defaults to 1Mbps for UDP)
 	// - For TCP: only apply if explicitly specified (iperf3 defaults to unlimited for TCP)
-	if cfg.Protocol {
+	if cfg.Protocol == "udp" {
 		if cfg.Bitrate != "" {
 			iperfArgs = append(iperfArgs, "-b", cfg.Bitrate)
 		} else {
