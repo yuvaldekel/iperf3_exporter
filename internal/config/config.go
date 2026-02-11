@@ -191,6 +191,21 @@ func loadConfigFromFile(path string, cfg *ConfigFile) error {
 		return errors.New("error unmarshaling config file: " + err.Error())
 	}
 
+	for i := range cfg.Targets {
+        if cfg.Targets[i].Port == 0 {
+            cfg.Targets[i].Port = 5201
+        }
+        if cfg.Targets[i].Protocol == "" {
+            cfg.Targets[i].Protocol = "tcp"
+        }
+        if cfg.Targets[i].Period == 0 {
+            cfg.Targets[i].Period = 5 * time.Second
+        }
+        if cfg.Targets[i].Interval == 0 {
+            cfg.Targets[i].Interval = 3600 * time.Second
+        }
+	}
+
 	var validate = validator.New()
 	validate.RegisterValidation("bitrate", func(fl validator.FieldLevel) bool {
     	val := fl.Field().String()

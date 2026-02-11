@@ -47,15 +47,15 @@ var (
 
 // TargetConfig represents the configuration for a single probe.
 type TargetConfig struct {
-	Target      string 			`yaml:"target"      validate:"required,hostname|ip"`
-	Port        int				`yaml:"port"        validate:"default=5201,min=1,max=65535"`
-	Period      time.Duration	`yaml:"period" 	    validate:"time_duration,default=5s"`
-	Timeout     time.Duration	`yaml:"timeout" 	validate:"time_duration,default=30s"`
-	ReverseMode bool			`yaml:"reverseMode" validate:"default=false"`
-	Protocol    string			`yaml:"protocol"    validate:"oneof=tcp udp,default=tcp"`
-	Bitrate     string			`yaml:"bitrate"     validate:"bitrate,default=1Mbit/s"`
-	Bind        string			`yaml:"bind"  		validate:"omitempty,ip"`
-	Interval   time.Duration	`yaml:"interval" 	validate:"time_duration,default=3600s"`
+    Target      string          `yaml:"target"      validate:"required,hostname|ip"`
+    Port        int             `yaml:"port"        validate:"required,min=1,max=65535"`
+    Period      time.Duration   `yaml:"period"      validate:"required,gt=0"`
+    Timeout     time.Duration   `yaml:"timeout"     validate:"required,gt=0"`
+    ReverseMode bool            `yaml:"reverseMode"`
+    Protocol    string          `yaml:"protocol"    validate:"required,oneof=tcp udp"`
+    Bitrate     string          `yaml:"bitrate"     validate:"required,bitrate"` 
+    Bind        string          `yaml:"bind"        validate:"omitempty,ip"`
+    Interval    time.Duration   `yaml:"interval"    validate:"required,gt=0"`
 }
 
 // Collector implements the prometheus.Collector interface for iperf3 metrics.
