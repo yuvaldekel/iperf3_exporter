@@ -170,7 +170,7 @@ func parseFlags(cfg *ConfigFile) string {
 
 	kingpin.Parse()
 
-	return configFilePath
+	return &configFilePath
 }
 
 // loadConfigFromFile loads the configuration from the specified file path into the provided Config struct.
