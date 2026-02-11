@@ -137,7 +137,7 @@ func LoadConfig() *Config {
 func parseFlags(cfg *ConfigFile) string {
 
 	// Define command-line flags
-	configFilePath := kingpin.Flag("config", "Path to the configuration file").
+	*configFilePath := kingpin.Flag("config", "Path to the configuration file").
         Envar("IPERF3_EXPORTER_CONFIG_FILE").
         Default("config.yaml").
 		String()
