@@ -45,7 +45,7 @@ type ConfigFile struct {
 	Logging	struct {
 		Level 	  string				   `yaml:"level" json:"level"`
 		Format	  string				   `yaml:"format" json:"format"`
-	} 									   `yaml:"logging"`
+	} 									   `yaml:"logs"`
 }
 
 // Config represents the runtime configuration for the iperf3_exporter.
