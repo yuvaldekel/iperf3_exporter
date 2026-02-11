@@ -20,6 +20,7 @@ import (
 	"log"
 	"os"
 	"time"
+	"strings"
 
 	"gopkg.in/yaml.v3"
 	"github.com/yuvaldekel/iperf3_exporter/internal/collector"
