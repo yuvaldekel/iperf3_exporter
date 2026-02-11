@@ -139,7 +139,8 @@ func parseFlags(cfg *ConfigFile) string {
 	// Define command-line flags
 	configFilePath := kingpin.Flag("config", "Path to the configuration file").
         Envar("IPERF3_EXPORTER_CONFIG_FILE").
-        Default("config.yaml")
+        Default("config.yaml").
+		String()
 
 	kingpin.Flag("listen-address", "Port to listen on").
         Envar("IPERF3_EXPORTER_PORT").
@@ -169,7 +170,7 @@ func parseFlags(cfg *ConfigFile) string {
 
 	kingpin.Parse()
 
-	return configFilePath.String()
+	return configFilePath
 }
 
 // loadConfigFromFile loads the configuration from the specified file path into the provided Config struct.
