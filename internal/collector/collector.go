@@ -52,7 +52,7 @@ type TargetConfig struct {
 	Period      time.Duration	`yaml:"period" json:"period"			validate:"time_duration,default=5s"`
 	Timeout     time.Duration	`yaml:"timeout" json:"timeout"			validate:"time_duration,default=30s"`
 	ReverseMode bool			`yaml:"reverseMode" json:"reverse_mode" validate:"default=false"`
-	Protocol    string			`yaml:"protocol" json:"protocol"	 	validate:"omitempty,oneof=tcp udp"`
+	Protocol    string			`yaml:"protocol" json:"protocol"	 	validate:"oneof=tcp udp,default=tcp"`
 	Bitrate     string			`yaml:"bitrate" json:"bitrate"			validate:"bitrate,default=1Mbit/s"`
 	Bind        string			`yaml:"bind" json:"bind"				validate:"omitempty,ip"`
 	Interval   time.Duration	`yaml:"interval" json:"interval"		validate:"default=3600s"`
