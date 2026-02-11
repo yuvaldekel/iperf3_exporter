@@ -25,7 +25,6 @@ import (
 	"github.com/alecthomas/kingpin/v2"
 	"github.com/prometheus/common/version"
 	"github.com/prometheus/exporter-toolkit/web"
-	webflag "github.com/prometheus/exporter-toolkit/web/kingpinflag"
 )
 
 
@@ -75,7 +74,7 @@ func newConfig() *ConfigFile {
 // LoadConfig loads the configuration from command-line flags and optionally from a configuration file.
 func LoadConfig() *Config {
 	configFile := newConfig()
-	configPath := parseFlags(*configFile)
+	configPath := parseFlags(configFile)
 
 	// Load configuration from file if specified
 	if err := loadConfigFromFile(configPath,*configFile); err != nil {
