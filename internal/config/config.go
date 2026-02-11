@@ -82,6 +82,7 @@ func LoadConfig() *Config {
 		log.Fatalf("Error loading configuration from file: %v", err)
 	}
 
+	log.Println("%s", configFile.ListenAddress)
 	// Create web configuration for the exporter
 	webConfig := &web.FlagConfig{
         WebListenAddresses: &[]string{":" + configFile.ListenAddress},
