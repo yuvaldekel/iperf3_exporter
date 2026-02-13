@@ -347,6 +347,18 @@ func (s *Server) probeHandler(w http.ResponseWriter, r *http.Request) {
 	c := collector.NewCollector(TargetConfig, s.logger)
 	registry.MustRegister(c)
 
+	metrics, err := registry.Gather()
+	if err != nil {
+		s.logger.Error("Failed to gather metrics from collector",
+			"target", targetConfig.Target,
+			"port", targetConfig.Port,
+			"error", err)
+		collector.IperfErrors.Inc()
+		return
+	}
+
+	s.metricsCache.Update(fmt.Sprintf("%v:%v:%v", targetConfig.Target, targetConfig.Port, targetConfig.Protocol), metrics)
+
 	// Delegate http serving to Prometheus client library, which will call collector.Collect.
 	h := promhttp.HandlerFor(registry, promhttp.HandlerOpts{})
 	h.ServeHTTP(w, r)
