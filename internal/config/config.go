@@ -212,15 +212,11 @@ func loadConfigFromFile(path string, cfg *ConfigFile) error {
 	}
 
 	var validate = validator.New()
-	err := validate.RegisterValidation("bitrate", func(fl validator.FieldLevel) bool {
+	validate.RegisterValidation("bitrate", func(fl validator.FieldLevel) bool {
 		val := fl.Field().String()
 		return iperf.ValidateBitrate(val)
     })
 	
-	if err != nil {
-		return errors.New("error register bitrate validation: " + err.Error())
-	}
-
 	if err := validate.Struct(cfg); err != nil {
         return errors.New("config validation failed: " + err.Error())
     }
