@@ -140,7 +140,6 @@ func (s *Server) runTargetCollectors() {
 func (s *Server) runTargetCollector(targetConfig collector.TargetConfig) {
 	s.logger.Info("Target collector started", "target", targetConfig.Target, "port", targetConfig.Port, "interval", targetConfig.Interval)
 
-	s.logger.Info("", targetConfig.Protocol)
 	// Create a ticker with the target's interval
 	ticker := time.NewTicker(targetConfig.Interval)
 	defer ticker.Stop()
@@ -239,7 +238,7 @@ func (s *Server) probeHandler(w http.ResponseWriter, r *http.Request) {
 	if protocolParam != "" {
 
 		if protocolParam != "tcp" && protocolParam != "udp" {
-			http.Error(w, fmt.Sprintf("'protocol' parameter must be 'tcp' or 'udp' (string)"), http.StatusBadRequest)
+			http.Error(w, "'protocol' parameter must be 'tcp' or 'udp' (string)", http.StatusBadRequest)
 			collector.IperfErrors.Inc()
 
 			return

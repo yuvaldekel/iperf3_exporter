@@ -40,7 +40,7 @@ type ConfigFile struct {
 	MetricsPath   string		  		   `yaml:"metricsPath" json:"metrics_path"`
 	ProbePath     string		  		   `yaml:"probePath" json:"probe_path"`
 	Timeout       time.Duration	  		   `yaml:"timeout" json:"timeout"`
-	Targets 	  []collector.TargetConfig `yaml:"targets" json:"targets" validate:"dive",default:"[]"` 
+	Targets 	  []collector.TargetConfig `yaml:"targets" json:"targets" validate: "dive",default:"[]"` 
 	// Logging configuration for the exporter
 	Logging	struct {
 		Level 	  string				   `yaml:"level" json:"level"`
@@ -87,7 +87,6 @@ func LoadConfig() *Config {
 		log.Fatalf("Error loading configuration from file: %v", err)
 	}
 
-	log.Println("%s", configFile.ListenAddress)
 	// Create web configuration for the exporter
 	webConfig := &web.FlagConfig{
         WebListenAddresses: &[]string{":" + configFile.ListenAddress},
@@ -213,10 +212,14 @@ func loadConfigFromFile(path string, cfg *ConfigFile) error {
 	}
 
 	var validate = validator.New()
-	validate.RegisterValidation("bitrate", func(fl validator.FieldLevel) bool {
+	err := validate.RegisterValidation("bitrate", func(fl validator.FieldLevel) bool {
 		val := fl.Field().String()
 		return iperf.ValidateBitrate(val)
     })
+	
+	if err != nil {
+		return errors.New("error register bitrate validation: " + err.Error())
+	}
 
 	if err := validate.Struct(cfg); err != nil {
         return errors.New("config validation failed: " + err.Error())
