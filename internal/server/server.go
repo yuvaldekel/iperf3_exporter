@@ -155,7 +155,7 @@ func (s *Server) runTargetCollector(targetConfig collector.TargetConfig) {
 }
 
 // executeTargetCollector executes the collector for a single target and records metrics.
-func (s *Server) executeTargetCollector(targetConfig collector.TargetConfig, registry prometheus.Registry) {
+func (s *Server) executeTargetCollector(targetConfig collector.TargetConfig, *registry prometheus.Registry) {
 	start := time.Now()
 
 	// Collect metrics
