@@ -177,7 +177,7 @@ func (s *Server) executeTargetCollector(targetConfig collector.TargetConfig, reg
 		return
 	}
 
-	s.metricsCache.Update(fmt.Sprintf("%v:%v", targetConfig.Target, targetConfig.Protocol), metrics)
+	s.metricsCache.Update(fmt.Sprintf("%v:%v:%v", targetConfig.Target, targetConfig.Port, targetConfig.Protocol), metrics)
 
 	duration := time.Since(start).Seconds()
 	collector.IperfDuration.Observe(duration)
