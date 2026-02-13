@@ -47,7 +47,7 @@ type Server struct {
 	config *config.Config
 	logger *slog.Logger
 	server *http.Server
-	metricsCache *MetricsCache
+	metricsCache *collector.MetricsCache
 }
 
 // New creates a new Server.
