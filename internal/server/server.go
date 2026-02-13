@@ -144,7 +144,6 @@ func (s *Server) runTargetCollector(targetConfig collector.TargetConfig) {
 	// Create collector with target configuration
 	c := collector.NewCollector(targetConfig, s.logger)
 	registry.MustRegister(c)
-	promhttp.HandlerFor(registry, promhttp.HandlerOpts{})
 
 	// Run the collector immediately on startup
 	s.executeTargetCollector(targetConfig, registry)
@@ -173,6 +172,8 @@ func (s *Server) executeTargetCollector(targetConfig collector.TargetConfig, reg
 
 	duration := time.Since(start).Seconds()
 	collector.IperfDuration.Observe(duration)
+
+	promhttp.HandlerFor(registry, promhttp.HandlerOpts{})
 
 	s.logger.Debug("Target collector executed",
 		"target", targetConfig.Target,
