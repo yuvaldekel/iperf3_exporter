@@ -77,8 +77,6 @@ func (mc *MetricsCache) Gather() ([]*dto.MetricFamily, error) {
     }
     return allMetrics, nil
 }
-3.
-
 
 // TargetConfig represents the configuration for a single probe.
 type TargetConfig struct {
