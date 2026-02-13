@@ -47,6 +47,7 @@ type Server struct {
 	config *config.Config
 	logger *slog.Logger
 	server *http.Server
+	metricsCache *MetricsCache
 }
 
 // New creates a new Server.
@@ -54,6 +55,7 @@ func New(cfg *config.Config) *Server {
 	return &Server{
 		config: cfg,
 		logger: cfg.Logger,
+		metricsCache: collector.NewMetricsCache(),
 	}
 }
 
@@ -65,6 +67,11 @@ func (s *Server) Start() error {
 	prometheus.MustRegister(collector.IperfDuration)
 	prometheus.MustRegister(collector.IperfErrors)
 
+	gatherers := prometheus.Gatherers{
+        prometheus.DefaultGatherer,
+        s.metricsCache,
+    }
+	
 	// Create router
 	mux := http.NewServeMux()
 
@@ -73,7 +80,7 @@ func (s *Server) Start() error {
 	handler = s.withLogging(handler)
 
 	// Register handlers
-	mux.Handle(s.config.MetricsPath, promhttp.Handler())
+	mux.Handle(s.config.MetricsPath, promhttp.HandlerFor(gatherers, promhttp.HandlerOpts{}))
 	mux.HandleFunc(s.config.ProbePath, s.probeHandler)
 	mux.HandleFunc("/", s.indexHandler)
 	mux.HandleFunc("/health", s.healthHandler)
@@ -170,10 +177,10 @@ func (s *Server) executeTargetCollector(targetConfig collector.TargetConfig, reg
 		return
 	}
 
+	s.metricsCache.Update(fmt.Sprintf("%v:%v", targetConfig.Target, targetConfig.Protocol), metrics)
+
 	duration := time.Since(start).Seconds()
 	collector.IperfDuration.Observe(duration)
-
-	promhttp.HandlerFor(registry, promhttp.HandlerOpts{})
 
 	s.logger.Debug("Target collector executed",
 		"target", targetConfig.Target,
