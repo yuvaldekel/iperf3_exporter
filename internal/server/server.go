@@ -144,6 +144,7 @@ func (s *Server) runTargetCollector(targetConfig collector.TargetConfig) {
 	// Create collector with target configuration
 	c := collector.NewCollector(targetConfig, s.logger)
 	registry.MustRegister(c)
+	promhttp.HandlerFor(registry, promhttp.HandlerOpts{})
 
 	// Run the collector immediately on startup
 	s.executeTargetCollector(targetConfig, registry)
@@ -152,6 +153,7 @@ func (s *Server) runTargetCollector(targetConfig collector.TargetConfig) {
 	for range ticker.C {
 		s.executeTargetCollector(targetConfig, registry)
 	}
+
 }
 
 // executeTargetCollector executes the collector for a single target and records metrics.
