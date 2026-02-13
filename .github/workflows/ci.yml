@@ -54,9 +54,7 @@ jobs:
       - run: go build -v ./...
 
   dependency-review:
-    on:
-      pull_request:
-        branches: [main]
+    if: github.event_name == 'pull_request' && github.base_ref == 'main'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
