@@ -138,6 +138,13 @@ func (s *Server) runTargetCollector(targetConfig collector.TargetConfig) {
 	ticker := time.NewTicker(targetConfig.Interval)
 	defer ticker.Stop()
 
+	// Create a dedicated registry for this target
+	registry := prometheus.NewRegistry()
+
+	// Create collector with target configuration
+	c := collector.NewCollector(targetConfig, s.logger)
+	registry.MustRegister(c)
+
 	// Run the collector immediately on startup
 	s.executeTargetCollector(targetConfig)
 
@@ -148,16 +155,9 @@ func (s *Server) runTargetCollector(targetConfig collector.TargetConfig) {
 }
 
 // executeTargetCollector executes the collector for a single target and records metrics.
-func (s *Server) executeTargetCollector(targetConfig collector.TargetConfig) {
+func (s *Server) executeTargetCollector(targetConfig collector.TargetConfig, registry string) {
 	start := time.Now()
 
-	// Create a dedicated registry for this target
-	registry := prometheus.NewRegistry()
-
-	// Create collector with target configuration
-	c := collector.NewCollector(targetConfig, s.logger)
-	registry.MustRegister(c)
-    prometheus.MustRegister(c)
 
 	// Collect metrics
 	metrics, err := registry.Gather()
