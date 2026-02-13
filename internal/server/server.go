@@ -153,10 +153,11 @@ func (s *Server) executeTargetCollector(targetConfig collector.TargetConfig) {
 
 	// Create a dedicated registry for this target
 	registry := prometheus.NewRegistry()
-	
+
 	// Create collector with target configuration
 	c := collector.NewCollector(targetConfig, s.logger)
-	if err := registry.MustRegister(c) err != nil {
+	err := registry.MustRegister(c)
+	if err != nil {
 		s.logger.Error("Failed to register collector for target", 
 			"target", targetConfig.Target, 
 			"port", targetConfig.Port, 
