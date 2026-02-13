@@ -156,7 +156,15 @@ func (s *Server) executeTargetCollector(targetConfig collector.TargetConfig) {
 
 	// Create collector with target configuration
 	c := collector.NewCollector(targetConfig, s.logger)
-	registry.MustRegister(c)
+	err := registry.MustRegister(c)
+	if err != nil {
+		s.logger.Error("Failed to register collector for target", 
+			"target", targetConfig.Target, 
+			"port", targetConfig.Port, 
+			"error", err)
+		collector.IperfErrors.Inc()
+		return
+	}
 
 	// Collect metrics
 	metrics, err := registry.Gather()
