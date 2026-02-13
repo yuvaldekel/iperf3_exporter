@@ -61,6 +61,9 @@ func NewRunner(logger *slog.Logger) Runner {
 // Result represents the parsed result from an iperf3 test.
 type Result struct {
 	Success               bool
+	Target                string
+	Port                  int
+	ReverseMode           bool
 	SentSeconds           float64
 	SentBytes             float64
 	SentBitsPerSecond     float64
@@ -162,7 +165,11 @@ func Run(ctx context.Context, cfg Config) Result {
 func (r *DefaultRunner) Run(ctx context.Context, cfg Config) Result {
 	// Create a result with default values
 	result := Result{
-		Success: false,
+		Success:     false,
+		Target:      cfg.Target,
+		Port:        cfg.Port,
+		ReverseMode: cfg.ReverseMode,
+		Protocol:    cfg.Protocol,
 	}
 
 	// Validate bitrate if provided
@@ -266,8 +273,7 @@ func (r *DefaultRunner) Run(ctx context.Context, cfg Config) Result {
 		return result
 	}
 
-	// Set UDP based on user configuration
-	result.Protocol = cfg.Protocol
+	// Set success flag and process metrics
 	result.Success = true
 
 	// Handle different metrics based on the protocol
