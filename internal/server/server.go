@@ -157,6 +157,7 @@ func (s *Server) executeTargetCollector(targetConfig collector.TargetConfig) {
 	// Create collector with target configuration
 	c := collector.NewCollector(targetConfig, s.logger)
 	registry.MustRegister(c)
+    prometheus.MustRegister(c)
 
 	// Collect metrics
 	metrics, err := registry.Gather()
