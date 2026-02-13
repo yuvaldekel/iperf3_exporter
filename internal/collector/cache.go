@@ -1,6 +1,8 @@
 package collector
 
 import (
+	"sync"
+	
 	dto "github.com/prometheus/client_model/go"
 )
 
