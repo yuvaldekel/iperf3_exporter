@@ -146,11 +146,11 @@ func (s *Server) runTargetCollector(targetConfig collector.TargetConfig) {
 	registry.MustRegister(c)
 
 	// Run the collector immediately on startup
-	s.executeTargetCollector(targetConfig)
+	s.executeTargetCollector(targetConfig, registry)
 
 	// Then run it on the interval
 	for range ticker.C {
-		s.executeTargetCollector(targetConfig)
+		s.executeTargetCollector(targetConfig, registry)
 	}
 }
 
