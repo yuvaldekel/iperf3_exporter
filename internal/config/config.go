@@ -38,6 +38,8 @@ type ConfigFile struct {
 	Targets 	  []collector.TargetConfig `yaml:"targets" json:"targets" validate:"dive" default:"[]"` 
 	TLSCrt		  string				   `yaml:"tlsCrt" json:"tls_crt"`
 	TLSKey  	  string				   `yaml:"tlsKey" json:"tls_key"`
+    Interval      time.Duration   		   `yaml:"interval" json:"interval" validate:"gt=0"`
+
 	// Logging configuration for the exporter
 	Logging	struct {
 		Level 	  string				   `yaml:"level" json:"level"`
@@ -72,6 +74,7 @@ func newConfig() *ConfigFile {
 		TLSKey: 	   "",
 		Timeout:       30 * time.Second,
 		Targets: 	  []collector.TargetConfig{},
+		Interval:	  3600 * time.Second,
 		Logging: struct {
 			Level  string `yaml:"level" json:"level"`
 			Format string `yaml:"format" json:"format"`
@@ -201,7 +204,7 @@ func loadConfigFromFile(path string, cfg *ConfigFile) error {
             cfg.Targets[i].Period = 5 * time.Second
         }
         if cfg.Targets[i].Interval == 0 {
-            cfg.Targets[i].Interval = 3600 * time.Second
+            cfg.Targets[i].Interval = cfg.Interval
         }
         if cfg.Targets[i].Timeout == 0 {
             cfg.Targets[i].Timeout = cfg.Timeout
