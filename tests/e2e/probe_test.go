@@ -83,6 +83,20 @@ func TestProbeEndpoint(t *testing.T) {
 			targetPort = 5201
 		}
 
+		protocol := "tcp" 
+
+		protocolParam := r.URL.Query().Get("protocol")
+		if protocolParam != "" {
+
+			if protocolParam != "tcp" && protocolParam != "udp" {
+				http.Error(w, "'protocol' parameter must be 'tcp' or 'udp' (string)", http.StatusBadRequest)
+				collector.IperfErrors.Inc()
+
+				return
+			}
+			protocol = protocolParam
+		}
+
 		var reverseMode bool
 		reverseParam := r.URL.Query().Get("reverse_mode")
 		if reverseParam != "" {
