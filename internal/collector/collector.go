@@ -230,7 +230,6 @@ func (c *Collector) Collect(ch chan<- prometheus.Metric) {
 		Protocol:    c.protocol,
 		Bitrate:     c.bitrate,
 		Bind:        c.bind,
-		Logger:      c.logger,
 	})
 
 	// Common label values for all metrics
@@ -249,11 +248,11 @@ func (c *Collector) Collect(ch chan<- prometheus.Metric) {
 		ch <- prometheus.MustNewConstMetric(c.receivedSeconds, prometheus.GaugeValue, result.ReceivedSeconds, labelValues...)
 		ch <- prometheus.MustNewConstMetric(c.receivedBytes, prometheus.GaugeValue, result.ReceivedBytes, labelValues...)
 
-		result.Logger.info("", result.Protocol)
+		c.logger.info("", result.Protocol)
 
 		// Retransmits is only relevant in TCP protocol
 		if result.Protocol == "tcp" {
-			result.Logger.info("", result.Protocol)
+			c.logger.info("", result.Protocol)
 			ch <- prometheus.MustNewConstMetric(c.retransmits, prometheus.GaugeValue, result.Retransmits, labelValues...)
 		}
 
