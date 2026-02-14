@@ -380,23 +380,20 @@ func (s *Server) probeHandler(w http.ResponseWriter, r *http.Request) {
 func (s *Server) indexHandler(w http.ResponseWriter, r *http.Request) {
 	if r.URL.Path != "/" {
 		http.NotFound(w, r)
-
 		return
 	}
 
-	// Get landing page configuration from config
-	landingConfig := s.config.GetLandingConfig()
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 
-	// Create and serve the landing page
-	landingPage, err := web.NewLandingPage(landingConfig)
-	if err != nil {
-		s.logger.Warn("Failed to create landing page", "err", err)
-		http.Error(w, "Internal server error", http.StatusInternalServerError)
+	content := fmt.Sprintf(config.LandingPageTemplate,
+		s.config.MetricsPath,
+		version.Info(),
+		s.config.ProbePath,
+		s.config.ProbePath,
+		s.config.ProbePath,
+	)
 
-		return
-	}
-
-	landingPage.ServeHTTP(w, r)
+	w.Write([]byte(content))
 }
 
 // healthHandler handles requests to the /health endpoint.
