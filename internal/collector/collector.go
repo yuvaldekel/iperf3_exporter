@@ -277,7 +277,8 @@ func (c *Collector) Collect(ch chan<- prometheus.Metric) {
 		if result.Protocol == "tcp" {
 			// TCP-specific metrics on failure
 			ch <- prometheus.MustNewConstMetric(c.retransmits, prometheus.GaugeValue, 0, labelValues...)
-		} else {
+		}
+		if result.Protocol == "udp" {
 			// UDP-specific metrics on failure
 			ch <- prometheus.MustNewConstMetric(c.sentPackets, prometheus.GaugeValue, 0, labelValues...)
 			ch <- prometheus.MustNewConstMetric(c.sentJitter, prometheus.GaugeValue, 0, labelValues...)
