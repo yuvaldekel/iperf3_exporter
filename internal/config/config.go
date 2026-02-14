@@ -59,6 +59,11 @@ type Config struct {
 	WebConfig     *web.FlagConfig
 }
 
+func validateBitrate(fl validator.FieldLevel) bool {
+	val := fl.Field().String()
+	return iperf.ValidateBitrate(val)
+}
+
 // newConfig creates a new Config with default values.
 func newConfig() *ConfigFile {
 	return &ConfigFile{
@@ -212,10 +217,7 @@ func loadConfigFromFile(path string, cfg *ConfigFile) error {
 	}
 
 	var validate = validator.New()
-	err != validate.RegisterValidation("bitrate", func(fl validator.FieldLevel) bool {
-		val := fl.Field().String()
-		return iperf.ValidateBitrate(val)
-    })
+	err != validate.RegisterValidation("bitrate", validateBitrate)
 
 	if err != nil {
 		return errors.New("config validation failed: " + err.Error())
