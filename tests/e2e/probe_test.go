@@ -141,6 +141,7 @@ func TestProbeEndpoint(t *testing.T) {
 			ReverseMode: reverseMode,
 			Bitrate:     bitrate,
 			Bind:        bind,
+			Protocol:    protocol,
 		}
 		c := collector.NewCollectorWithRunner(TargetConfig, slog.Default(), mockRunner)
 		registry.MustRegister(c)
