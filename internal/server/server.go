@@ -28,6 +28,7 @@ import (
 	"github.com/yuvaldekel/iperf3_exporter/internal/iperf"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/collectors"
+	"github.com/prometheus/common/version"
 	versioncollector "github.com/prometheus/client_golang/prometheus/collectors/version"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
@@ -385,7 +386,7 @@ func (s *Server) indexHandler(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 
-	content := fmt.Sprintf(server.LandingPageTemplate,
+	content := fmt.Sprintf(LandingPageTemplate,
 		s.config.MetricsPath,
 		version.Info(),
 		s.config.ProbePath,
