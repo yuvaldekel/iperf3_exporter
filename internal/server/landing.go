@@ -13,10 +13,6 @@
 
 package config
 
-import (
-	"github.com/prometheus/common/version"
-)
-
 const LandingPageTemplate = `
 <!DOCTYPE html>
 <html lang="en">
