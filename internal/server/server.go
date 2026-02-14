@@ -245,7 +245,8 @@ func (s *Server) probeHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		protocol = protocolParam
 	}
-
+	s.logger.Info("", protocol)
+	
 	bitrate := r.URL.Query().Get("bitrate")
 	if bitrate != "" && !iperf.ValidateBitrate(bitrate) {
 		http.Error(w, "bitrate must provided as #[KMG][/#], target bitrate in bits/sec (0 for unlimited), (default 1 Mbit/sec for UDP, unlimited for TCP) (optional slash and packet count for burst mode)", http.StatusBadRequest)
