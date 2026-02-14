@@ -249,11 +249,11 @@ func (c *Collector) Collect(ch chan<- prometheus.Metric) {
 		ch <- prometheus.MustNewConstMetric(c.receivedSeconds, prometheus.GaugeValue, result.ReceivedSeconds, labelValues...)
 		ch <- prometheus.MustNewConstMetric(c.receivedBytes, prometheus.GaugeValue, result.ReceivedBytes, labelValues...)
 
-		c.logger.Info("", result.Protocol)
+		c.logger.Info("test", c.protocol)
 
 		// Retransmits is only relevant in TCP protocol
 		if result.Protocol == "tcp" {
-			c.logger.Info("", result.Protocol)
+			c.logger.Info("test2", c.protocol)
 			ch <- prometheus.MustNewConstMetric(c.retransmits, prometheus.GaugeValue, result.Retransmits, labelValues...)
 		}
 
