@@ -20,6 +20,7 @@ import (
 	"strconv"
 	"sync"
 	"time"
+	"fmt"
 
 	"github.com/yuvaldekel/iperf3_exporter/internal/iperf"
 	"github.com/prometheus/client_golang/prometheus"
@@ -249,8 +250,11 @@ func (c *Collector) Collect(ch chan<- prometheus.Metric) {
 		ch <- prometheus.MustNewConstMetric(c.receivedSeconds, prometheus.GaugeValue, result.ReceivedSeconds, labelValues...)
 		ch <- prometheus.MustNewConstMetric(c.receivedBytes, prometheus.GaugeValue, result.ReceivedBytes, labelValues...)
 
+		fmt.Printf("%v", result.Protocol)
+
 		// Retransmits is only relevant in TCP protocol
 		if result.Protocol == "tcp" {
+			fmt.Printf("%v", result.Protocol)
 			ch <- prometheus.MustNewConstMetric(c.retransmits, prometheus.GaugeValue, result.Retransmits, labelValues...)
 		}
 

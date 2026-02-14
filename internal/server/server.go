@@ -245,7 +245,6 @@ func (s *Server) probeHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		protocol = protocolParam
 	}
-	s.logger.Info("", protocol)
 	
 	bitrate := r.URL.Query().Get("bitrate")
 	if bitrate != "" && !iperf.ValidateBitrate(bitrate) {
