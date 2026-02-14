@@ -40,7 +40,7 @@ type ConfigFile struct {
 	MetricsPath   string		  		   `yaml:"metricsPath" json:"metrics_path"`
 	ProbePath     string		  		   `yaml:"probePath" json:"probe_path"`
 	Timeout       time.Duration	  		   `yaml:"timeout" json:"timeout"`
-	Targets 	  []collector.TargetConfig `yaml:"targets" json:"targets" validate: "dive",default:"[]"` 
+	Targets 	  []collector.TargetConfig `yaml:"targets" json:"targets" validate:"dive" default:"[]"` 
 	// Logging configuration for the exporter
 	Logging	struct {
 		Level 	  string				   `yaml:"level" json:"level"`
