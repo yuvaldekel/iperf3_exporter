@@ -34,17 +34,18 @@ type ConfigFile struct {
 	ListenAddress string 		  		   `yaml:"listenAddress" json:"listen_address"`
 	MetricsPath   string		  		   `yaml:"metricsPath" json:"metrics_path"`
 	ProbePath     string		  		   `yaml:"probePath" json:"probe_path"`
-	Timeout       time.Duration	  		   `yaml:"timeout" json:"timeout"`
-	Targets 	  []collector.TargetConfig `yaml:"targets" json:"targets" validate:"dive" default:"[]"` 
 	TLSCrt		  string				   `yaml:"tlsCrt" json:"tls_crt"`
 	TLSKey  	  string				   `yaml:"tlsKey" json:"tls_key"`
     Interval      time.Duration   		   `yaml:"interval" json:"interval" validate:"gt=0"`
+	Timeout       time.Duration	  		   `yaml:"timeout" json:"timeout"`
 
 	// Logging configuration for the exporter
 	Logging	struct {
 		Level 	  string				   `yaml:"level" json:"level"`
 		Format	  string				   `yaml:"format" json:"format"`
 	} 									   `yaml:"logging"`
+
+	Targets 	  []collector.TargetConfig `yaml:"targets" json:"targets" validate:"dive" default:"[]"` 
 }
 
 // Config represents the runtime configuration for the iperf3_exporter.
