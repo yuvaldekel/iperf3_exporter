@@ -76,16 +76,15 @@ go build -o iperf3_exporter ./cmd/iperf3_exporter
 
 iPerf3 exporter is configured via command-line flags:
 
-| Flag | Description | Default |
-|------|-------------|---------|
-| `--web.listen-address` | Addresses on which to expose metrics and web interface (repeatable) | `:9579` |
-| `--web.telemetry-path` | Path under which to expose metrics | `/metrics` |
-| `--web.probe-path` | Path under which to expose the probe endpoint | `/probe` |
-| `--iperf3.timeout` | iperf3 run timeout | `30s` |
-| `--config` | Path to configuration file that can enable TLS or authentication | |
-| `--web.systemd-socket` | Use systemd socket activation listeners instead of port listeners (Linux only) | `false` |
-| `--log.level` | Only log messages with the given severity or above | `info` |
-| `--log.format` | Output format of log messages | `logfmt` |
+| Flag | environment variables | Description | Default |
+|------|-----------------------|-------------|---------|
+| `--listen-address` | `IPERF3_EXPORTER_PORT` | Addresses on which to expose metrics and web interface (repeatable) | `9579` |
+| `--mtrics-path` | - | Path under which to expose metrics | `/metrics` |
+| `--probe-path` | - | Path under which to expose the probe endpoint | `/probe` |
+| `--iperf3-timeout` | `IPERF3_EXPORTER_TIMEOUT` | iperf3 run timeout | `30s` |
+| `--config` | `IPERF3_EXPORTER_CONFIG_FILE` | Path to configuration file that can enable TLS or authentication | `config.yaml` |
+| `--log-level` | `IPERF3_EXPORTER_LOG_LEVEL` | Only log messages with the given severity or above | `info` |
+| `--log-format` | `IPERF3_EXPORTER_LOG_FORMAT` | Output format of log messages | `logfmt` |
 
 #### Web Configuration File
 
