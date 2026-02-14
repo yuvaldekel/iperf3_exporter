@@ -217,9 +217,8 @@ func loadConfigFromFile(path string, cfg *ConfigFile) error {
 	}
 
 	var validate = validator.New()
-	err != validate.RegisterValidation("bitrate", validateBitrate)
 
-	if err != nil {
+	if err := validate.RegisterValidation("bitrate", validateBitrate); err != nil {
 		return errors.New("config validation failed: " + err.Error())
 
 	}
