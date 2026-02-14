@@ -69,7 +69,7 @@ func newConfig() *ConfigFile {
 		MetricsPath:   "/metrics",
 		ProbePath:     "/probe",
 		TLSCrt: 	   "",
-		TLSLey: 	   "",
+		TLSKey: 	   "",
 		Timeout:       30 * time.Second,
 		Targets: 	  []collector.TargetConfig{},
 		Logging: struct {
