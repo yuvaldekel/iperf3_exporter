@@ -78,11 +78,11 @@ iPerf3 exporter is configured via command-line flags:
 
 | Flag | environment variables | Description | Default |
 |------|-----------------------|-------------|---------|
+| `--config` | `IPERF3_EXPORTER_CONFIG_FILE` | Path to configuration file that can enable TLS or authentication | `config.yaml` |
 | `--listen-address` | `IPERF3_EXPORTER_PORT` | Addresses on which to expose metrics and web interface (repeatable) | `9579` |
 | `--mtrics-path` | - | Path under which to expose metrics | `/metrics` |
 | `--probe-path` | - | Path under which to expose the probe endpoint | `/probe` |
 | `--iperf3-timeout` | `IPERF3_EXPORTER_TIMEOUT` | iperf3 run timeout | `30s` |
-| `--config` | `IPERF3_EXPORTER_CONFIG_FILE` | Path to configuration file that can enable TLS or authentication | `config.yaml` |
 | `--log-level` | `IPERF3_EXPORTER_LOG_LEVEL` | Only log messages with the given severity or above | `info` |
 | `--log-format` | `IPERF3_EXPORTER_LOG_FORMAT` | Output format of log messages | `logfmt` |
 
@@ -105,7 +105,7 @@ logging:
 tlsCrt: server.crt
 tlsKey: server.key
 
-# Targets that will be scraped constently
+# List of targets that will be scraped constently
 targets:
   - target: localhost
     port: 5201
