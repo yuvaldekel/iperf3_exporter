@@ -394,7 +394,10 @@ func (s *Server) indexHandler(w http.ResponseWriter, r *http.Request) {
 		s.config.ProbePath,
 	)
 
-	w.Write([]byte(content))
+	if err := w.Write([]byte(content)); err != nil {
+		s.logger.Warn("Failed to create landing page", "err", err)
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
+	}
 }
 
 // healthHandler handles requests to the /health endpoint.
