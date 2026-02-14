@@ -165,8 +165,8 @@ scrape_configs:
       port: ['5201']
       # Optional: enable reverse mode
       # reverse_mode: ['true']
-      # Optional: enable UDP mode
-      # udp_mode: ['true']
+      # Optional: UDP or TCP
+      # protocol: ['tcp']
       # Optional: set bitrate limit
       # bitrate: ['100M']
       # Optional: set test period
