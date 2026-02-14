@@ -394,7 +394,7 @@ func (s *Server) indexHandler(w http.ResponseWriter, r *http.Request) {
 		s.config.ProbePath,
 	)
 
-	if err := w.Write([]byte(content)); err != nil {
+	if _, err := w.Write([]byte(content)); err != nil {
 		s.logger.Warn("Failed to create landing page", "err", err)
 		http.Error(w, "Internal server error", http.StatusInternalServerError)
 	}
