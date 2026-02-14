@@ -385,7 +385,7 @@ func (s *Server) indexHandler(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 
-	content := fmt.Sprintf(LandingPageTemplate,
+	content := fmt.Sprintf(server.LandingPageTemplate,
 		s.config.MetricsPath,
 		version.Info(),
 		s.config.ProbePath,
