@@ -93,12 +93,24 @@ The exporter supports a configuration file for TLS and authentication settings. 
 Example configuration file:
 
 ```yaml
-tls_server_config:
-  cert_file: server.crt
-  key_file: server.key
+listenAddress: 8080
+metricsPath: /metrics
+probePath: /probe
+timeout: 30s
 
-basic_auth_users:
-  username: password
+logging:
+  level: info
+  format: logfmt
+
+tlsCrt: server.crt
+tlsKey: server.key
+
+# Targets that will be scraped constently
+targets:
+  - target: localhost
+    port: 5201
+    inteval: 1h
+    
 ```
 
 For more details on the web configuration file format, see the [exporter-toolkit documentation](https://github.com/prometheus/exporter-toolkit/blob/master/docs/web-configuration.md).
@@ -115,17 +127,17 @@ The timeout for each iperf3 probe is determined by the following logic:
 
 1. **Prometheus scrape timeout**: When Prometheus or compatible systems (e.g., VictoriaMetrics) scrape the exporter, they send the `X-Prometheus-Scrape-Timeout-Seconds` header containing the configured `scrape_timeout` value.
 
-2. **Configured timeout limit**: The `--iperf3.timeout` flag acts as an **upper limit**. If set, it restricts the effective timeout to be no larger than this value, regardless of the Prometheus scrape timeout.
+2. **Configured timeout limit**: The `--iperf3-timeout` flag acts as an **upper limit**. If set, it restricts the effective timeout to be no larger than this value, regardless of the Prometheus scrape timeout.
 
-3. **Default timeout**: If neither the Prometheus header nor `--iperf3.timeout` is provided, the timeout defaults to 30 seconds.
+3. **Default timeout**: If neither the Prometheus header nor `--iperf3-timeout` is provided, the timeout defaults to 30 seconds.
 
 4. **Timeout offset**: A small offset (0.5 seconds) is subtracted from the Prometheus timeout to ensure the exporter finishes before Prometheus gives up, allowing for network delays and cleaner error handling.
 
 **Examples:**
-- Prometheus `scrape_timeout: 60s`, `--iperf3.timeout=10s` → **Effective timeout: 10s** (configured limit applied)
-- Prometheus `scrape_timeout: 30s`, `--iperf3.timeout` not set → **Effective timeout: 29.5s** (header value minus offset)
-- No Prometheus header, `--iperf3.timeout=15s` → **Effective timeout: 15s** (configured value used)
-- No Prometheus header, `--iperf3.timeout` not set → **Effective timeout: 30s** (default)
+- Prometheus `scrape_timeout: 60s`, `--iperf3-timeout=10s` → **Effective timeout: 10s** (configured limit applied)
+- Prometheus `scrape_timeout: 30s`, `--iperf3-timeout` not set → **Effective timeout: 29.5s** (header value minus offset)
+- No Prometheus header, `--iperf3-timeout=15s` → **Effective timeout: 15s** (configured value used)
+- No Prometheus header, `--iperf3-timeout` not set → **Effective timeout: 30s** (default)
 
 This behavior ensures that the `--iperf3.timeout` flag can be used to enforce maximum test durations even when Prometheus is configured with longer scrape timeouts.
 
