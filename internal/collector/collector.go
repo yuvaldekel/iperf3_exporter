@@ -230,6 +230,7 @@ func (c *Collector) Collect(ch chan<- prometheus.Metric) {
 		Protocol:    c.protocol,
 		Bitrate:     c.bitrate,
 		Bind:        c.bind,
+		Logger:		 c.logger,
 	})
 
 	// Common label values for all metrics
