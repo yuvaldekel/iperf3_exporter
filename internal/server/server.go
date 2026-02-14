@@ -332,7 +332,7 @@ func (s *Server) probeHandler(w http.ResponseWriter, r *http.Request) {
 	registry := prometheus.NewRegistry()
 
 	// Create collector with probe configuration
-	targetConfig := collector.TargetConfig{
+	targetConfig := collector.TargetConfigl{
 		Target:      target,
 		Port:        targetPort,
 		Period:      runPeriod,

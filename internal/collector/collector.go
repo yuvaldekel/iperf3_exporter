@@ -249,16 +249,14 @@ func (c *Collector) Collect(ch chan<- prometheus.Metric) {
 		ch <- prometheus.MustNewConstMetric(c.receivedSeconds, prometheus.GaugeValue, result.ReceivedSeconds, labelValues...)
 		ch <- prometheus.MustNewConstMetric(c.receivedBytes, prometheus.GaugeValue, result.ReceivedBytes, labelValues...)
 
-		c.logger.Info("test", c.protocol)
 
 		// Retransmits is only relevant in TCP protocol
-		if result.Protocol == "tcp" {
-			c.logger.Info("test2", c.protocol)
+		if c.protocol == "tcp" {
 			ch <- prometheus.MustNewConstMetric(c.retransmits, prometheus.GaugeValue, result.Retransmits, labelValues...)
 		}
 
 		// Include UDP-specific metrics when in UDP protocol
-		if result.Protocol == "udp" {
+		if c.protocol == "udp" {
 			ch <- prometheus.MustNewConstMetric(c.sentPackets, prometheus.GaugeValue, result.SentPackets, labelValues...)
 			ch <- prometheus.MustNewConstMetric(c.sentJitter, prometheus.GaugeValue, result.SentJitter, labelValues...)
 			ch <- prometheus.MustNewConstMetric(c.sentLostPackets, prometheus.GaugeValue, result.SentLostPackets, labelValues...)
@@ -277,11 +275,11 @@ func (c *Collector) Collect(ch chan<- prometheus.Metric) {
 		ch <- prometheus.MustNewConstMetric(c.receivedBytes, prometheus.GaugeValue, 0, labelValues...)
 
 		// Only include TCP-specific metrics for the active mode
-		if result.Protocol == "tcp" {
+		if c.protocol == "tcp" {
 			// TCP-specific metrics on failure
 			ch <- prometheus.MustNewConstMetric(c.retransmits, prometheus.GaugeValue, 0, labelValues...)
 		}
-		if result.Protocol == "udp" {
+		if c.protocol == "udp" {
 			// UDP-specific metrics on failure
 			ch <- prometheus.MustNewConstMetric(c.sentPackets, prometheus.GaugeValue, 0, labelValues...)
 			ch <- prometheus.MustNewConstMetric(c.sentJitter, prometheus.GaugeValue, 0, labelValues...)
