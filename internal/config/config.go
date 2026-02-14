@@ -26,7 +26,6 @@ import (
 	"github.com/yuvaldekel/iperf3_exporter/internal/iperf"
 	"github.com/alecthomas/kingpin/v2"
 	"github.com/prometheus/common/version"
-	"github.com/prometheus/exporter-toolkit/web"
 	"github.com/go-playground/validator/v10"
 )
 
@@ -37,6 +36,8 @@ type ConfigFile struct {
 	ProbePath     string		  		   `yaml:"probePath" json:"probe_path"`
 	Timeout       time.Duration	  		   `yaml:"timeout" json:"timeout"`
 	Targets 	  []collector.TargetConfig `yaml:"targets" json:"targets" validate:"dive" default:"[]"` 
+	TLSCrt		  string				   `yaml:"tlsCrt" json:"tls_crt"`
+	TLSKey  	  string				   `yaml:"tlsKey" json:"tls_key"`
 	// Logging configuration for the exporter
 	Logging	struct {
 		Level 	  string				   `yaml:"level" json:"level"`
@@ -48,11 +49,12 @@ type ConfigFile struct {
 type Config struct {
 	ListenAddress string 		  
 	MetricsPath   string		  	
-	ProbePath     string		  	
+	ProbePath     string
+	TLSCrt		  string
+	TLSKey  	  string
 	Timeout       time.Duration	  	
 	Targets 	  []collector.TargetConfig 
 	Logger        *slog.Logger
-	WebConfig     *web.FlagConfig
 }
 
 func validateBitrate(fl validator.FieldLevel) bool {
@@ -66,6 +68,8 @@ func newConfig() *ConfigFile {
 		ListenAddress: "9579",
 		MetricsPath:   "/metrics",
 		ProbePath:     "/probe",
+		TLSCrt: 	   "",
+		TLSLey: 	   "",
 		Timeout:       30 * time.Second,
 		Targets: 	  []collector.TargetConfig{},
 		Logging: struct {
@@ -87,13 +91,6 @@ func LoadConfig() *Config {
 	if err := loadConfigFromFile(configPath, configFile); err != nil {
 		log.Fatalf("Error loading configuration from file: %v", err)
 	}
-
-	// Create web configuration for the exporter
-	webConfig := &web.FlagConfig{
-        WebListenAddresses: &[]string{":" + configFile.ListenAddress},
-        WebSystemdSocket:   new(bool),
-        WebConfigFile:      new(string),
-    }
 
 	// Initialize logger
 	var logLevelSlog slog.Level
@@ -127,7 +124,6 @@ func LoadConfig() *Config {
 		Timeout:       configFile.Timeout,
 		Targets: 	   configFile.Targets,
 		Logger:        logger,
-		WebConfig:     webConfig,
 	}
 	
 	// Validate configuration
@@ -245,14 +241,6 @@ func (c *Config) Validate() error {
 	if c.Logger == nil {
 		return errors.New("logger cannot be nil")
 	}
-
-	// Validate web configuration
-	if c.WebConfig == nil {
-		return errors.New("web configuration cannot be nil")
-	}
-
-	// Note: Additional web config validation is handled by web.ListenAndServe
-	// which checks for listen addresses and validates TLS config if provided
 
 	return nil
 }

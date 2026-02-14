@@ -30,7 +30,6 @@ import (
 	"github.com/prometheus/client_golang/prometheus/collectors"
 	versioncollector "github.com/prometheus/client_golang/prometheus/collectors/version"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
-	"github.com/prometheus/exporter-toolkit/web"
 )
 
 const (
@@ -99,17 +98,26 @@ func (s *Server) Start() error {
 
 	// Create HTTP server
 	s.server = &http.Server{
+		Addr:         ":" + s.config.ListenAddress,
 		Handler:      handler,
 		ReadTimeout:  60 * time.Second,
 		WriteTimeout: 60 * time.Second,
 	}
 
-	// Start server using exporter-toolkit
-	if err := web.ListenAndServe(s.server, s.config.WebConfig, s.logger); err != nil {
-		return fmt.Errorf("error starting server: %w", err)
-	}
+	s.logger.Info("Starting server", "address", " :", s.config.ListenAddress)
 
-	return nil
+	// Check if TLS is configured
+	if s.config.TLSCrt != "" && s.config.TLSKey != "" {
+		s.logger.Info("TLS enabled", "cert", s.config.TLSCrtFile, "key", s.config.TLSKeyFile)
+		if err := s.server.ListenAndServeTLS(s.config.TLSCrtFile, s.config.TLSKeyFile); err != nil && err != http.ErrServerClosed {
+			return fmt.Errorf("error starting TLS server: %w", err)
+		}
+	} else {
+		// Start server using standard http library without TLS
+		if err := s.server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			return fmt.Errorf("error starting server: %w", err)
+		}
+	}	return nil
 }
 
 // Stop stops the HTTP server.
