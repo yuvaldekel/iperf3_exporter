@@ -117,7 +117,9 @@ func (s *Server) Start() error {
 		if err := s.server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			return fmt.Errorf("error starting server: %w", err)
 		}
-	}	return nil
+	}
+	
+	return nil
 }
 
 // Stop stops the HTTP server.
