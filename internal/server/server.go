@@ -108,8 +108,8 @@ func (s *Server) Start() error {
 
 	// Check if TLS is configured
 	if s.config.TLSCrt != "" && s.config.TLSKey != "" {
-		s.logger.Info("TLS enabled", "cert", s.config.TLSCrtFile, "key", s.config.TLSKeyFile)
-		if err := s.server.ListenAndServeTLS(s.config.TLSCrtFile, s.config.TLSKeyFile); err != nil && err != http.ErrServerClosed {
+		s.logger.Info("TLS enabled", "cert", s.config.TLSCrt, "key", s.config.TLSKey)
+		if err := s.server.ListenAndServeTLS(s.config.TLSCrt, s.config.TLSKey); err != nil && err != http.ErrServerClosed {
 			return fmt.Errorf("error starting TLS server: %w", err)
 		}
 	} else {
