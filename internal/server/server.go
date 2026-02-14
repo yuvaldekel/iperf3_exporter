@@ -105,7 +105,7 @@ func (s *Server) Start() error {
 		WriteTimeout: 60 * time.Second,
 	}
 
-	s.logger.Info("Starting server", "address", " :", s.config.ListenAddress)
+	s.logger.Info("Starting server", "address", s.config.ListenAddress)
 
 	// Check if TLS is configured
 	if s.config.TLSCrt != "" && s.config.TLSKey != "" {
