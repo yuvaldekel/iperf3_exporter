@@ -106,7 +106,7 @@ targets:
     port: 5201
     inteval: 1h
     protocol: tcp
-    timeout: 30s
+    period: 10s
 ```
 
 For more details on the web configuration file format, see the [exporter-toolkit documentation](https://github.com/prometheus/exporter-toolkit/blob/master/docs/web-configuration.md).
