@@ -2,9 +2,9 @@
 
 A Prometheus exporter for iPerf3 network performance metrics.
 
-[![Go Report Card](https://goreportcard.com/badge/github.com/edgard/iperf3_exporter)](https://goreportcard.com/report/github.com/edgard/iperf3_exporter)
-[![Docker Pulls](https://img.shields.io/docker/pulls/ghcr.io/edgard/iperf3_exporter.svg)](https://github.com/users/edgard/packages/container/package/iperf3_exporter)
-[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://github.com/edgard/iperf3_exporter/blob/master/LICENSE)
+[![Go Report Card](https://goreportcard.com/badge/github.com/yuvaldekel/iperf3_exporter)](https://goreportcard.com/report/github.com/yuvaldekel/iperf3_exporter)
+[![Docker Pulls](https://img.shields.io/docker/pulls/ghcr.io/yuvaldekel/iperf3_exporter.svg)](https://github.com/users/yuvaldekel/packages/container/package/iperf3_exporter)
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://github.com/yuvaldekel/iperf3_exporter/blob/master/LICENSE)
 
 ## ⚠️ IMPORTANT: Docker Image Name Change
 
@@ -17,9 +17,8 @@ The iPerf3 exporter allows iPerf3 probing of endpoints for Prometheus monitoring
 - Measure network bandwidth between hosts
 - Monitor network performance over time
 - Support for both TCP and UDP tests
-- Configurable test parameters (duration, bitrate, etc.)
+- Configurable test parameters (protocol, duration, bitrate, etc.)
 - TLS support for secure communication
-- Basic authentication for access control
 - Health and readiness endpoints for monitoring
 - Prometheus metrics for exporter itself
 
@@ -27,11 +26,11 @@ The iPerf3 exporter allows iPerf3 probing of endpoints for Prometheus monitoring
 
 ### From Binaries
 
-Download the most suitable binary for your platform from [the releases tab](https://github.com/edgard/iperf3_exporter/releases).
+Download the most suitable binary for your platform from [the releases tab](https://github.com/yuvaldekel/iperf3_exporter/releases).
 
 ```bash
 # Download (replace VERSION and PLATFORM with appropriate values)
-curl -L -o iperf3_exporter https://github.com/edgard/iperf3_exporter/releases/download/VERSION/iperf3_exporter-VERSION.PLATFORM
+curl -L -o iperf3_exporter https://github.com/yuvaldekel/iperf3_exporter/releases/download/VERSION/iperf3_exporter-VERSION.PLATFORM
 
 # Make executable
 chmod +x iperf3_exporter
@@ -45,7 +44,7 @@ chmod +x iperf3_exporter
 ### Using Docker
 
 ```bash
-docker run --rm -d -p 9579:9579 --name iperf3_exporter ghcr.io/edgard/iperf3_exporter:latest
+docker run --rm -d -p 9579:9579 --name iperf3_exporter ghcr.io/yuvaldekel/iperf3_exporter:latest
 ```
 
 The Docker images are available for multiple architectures (amd64, arm64) and are published to GitHub Container Registry.
@@ -54,7 +53,7 @@ The Docker images are available for multiple architectures (amd64, arm64) and ar
 
 ```bash
 # Clone repository
-git clone https://github.com/edgard/iperf3_exporter.git
+git clone https://github.com/yuvaldekel/iperf3_exporter.git
 cd iperf3_exporter
 
 # Build
@@ -107,10 +106,11 @@ tlsKey: server.key
 
 # List of targets that will be scraped constently
 targets:
-  - target: localhost
+  - target: www.example.com
     port: 5201
     inteval: 1h
-    
+    protocol: tcp
+    timeout: 30s
 ```
 
 For more details on the web configuration file format, see the [exporter-toolkit documentation](https://github.com/prometheus/exporter-toolkit/blob/master/docs/web-configuration.md).
@@ -334,4 +334,4 @@ go test ./...
 
 ## License
 
-This project is released under Apache License 2.0, see [LICENSE](https://github.com/edgard/iperf3_exporter/blob/master/LICENSE).
+This project is released under Apache License 2.0, see [LICENSE](https://github.com/yuvaldekel/iperf3_exporter/blob/master/LICENSE).
