@@ -241,7 +241,7 @@ avg_over_time((iperf3_sent_bytes / iperf3_sent_seconds * 8 / 1000000)[30m:])
 
 ## Contributing
 
-This project is froked from (https://github.com/edgard/iperf3_exporter/releases)
+This project is froked from (https://github.com/edgard/iperf3_exporter)
 
 Contributions to the iperf3_exporter are welcome!
 
