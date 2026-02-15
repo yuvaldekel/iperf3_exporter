@@ -1,5 +1,19 @@
 listenAddress: 8080
+metricsPath: /metrics
+probePath: /probe
+timeout: 30s
 
+logging:
+  level: info
+  format: logfmt
+
+tlsCrt: server.crt
+tlsKey: server.key
+
+# List of targets that will be scraped constently
 targets:
-  - target: localhost
-
+  - target: www.example.com
+    port: 5201
+    inteval: 1h
+    protocol: tcp
+    timeout: 30s

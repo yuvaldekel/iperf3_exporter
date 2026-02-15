@@ -6,10 +6,6 @@ A Prometheus exporter for iPerf3 network performance metrics.
 [![Docker Pulls](https://img.shields.io/docker/pulls/ghcr.io/yuvaldekel/iperf3_exporter.svg)](https://github.com/users/yuvaldekel/packages/container/package/iperf3_exporter)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://github.com/yuvaldekel/iperf3_exporter/blob/master/LICENSE)
 
-## ⚠️ IMPORTANT: Docker Image Name Change
-
-**The Docker image has moved to GitHub Container Registry (ghcr.io) and the name has changed from `iperf3-exporter` to `iperf3_exporter` following GitHub's naming standards. If you were using the old image name, please update your references.**
-
 The iPerf3 exporter allows iPerf3 probing of endpoints for Prometheus monitoring, enabling you to measure network performance metrics like bandwidth, jitter, and packet loss.
 
 ## Features
@@ -199,16 +195,16 @@ The exporter provides the following metrics:
 
 | Metric | Description | Labels |
 |--------|-------------|--------|
-| `iperf3_up` | Was the last iperf3 probe successful (1 for success, 0 for failure) | `target`, `port` |
-| `iperf3_sent_seconds` | Total seconds spent sending packets | `target`, `port` |
-| `iperf3_sent_bytes` | Total sent bytes for the last test run | `target`, `port` |
-| `iperf3_received_seconds` | Total seconds spent receiving packets | `target`, `port` |
-| `iperf3_received_bytes` | Total received bytes for the last test run | `target`, `port` |
-| `iperf3_retransmits` | Total retransmits for the last test run (TCP mode only, omitted in UDP) | `target`, `port` |
-| `iperf3_sent_packets` | Total sent packets for the last UDP test run (UDP mode only) | `target`, `port` |
-| `iperf3_sent_jitter_ms` | Jitter in milliseconds for sent packets (UDP mode only) | `target`, `port` |
-| `iperf3_lost_packets` | Total lost packets for the last UDP test run (UDP mode only) | `target`, `port` |
-| `iperf3_lost_percent` | Percentage of packets lost for the last UDP test run (UDP mode only) | `target`, `port` |
+| `iperf3_up` | Was the last iperf3 probe successful (1 for success, 0 for failure) | `target`, `port`, `protocol`, `reverse_mode` |
+| `iperf3_sent_seconds` | Total seconds spent sending packets | `target`, `port`, `protocol`, `reverse_mode` |
+| `iperf3_sent_bytes` | Total sent bytes for the last test run | `target`, `port`, `protocol`, `reverse_mode` |
+| `iperf3_received_seconds` | Total seconds spent receiving packets | `target`, `port`, `protocol`, `reverse_mode` |
+| `iperf3_received_bytes` | Total received bytes for the last test run | `target`, `port`, `protocol`, `reverse_mode` |
+| `iperf3_retransmits` | Total retransmits for the last test run (TCP mode only, omitted in UDP) | `target`, `port`, `protocol`, `reverse_mode` |
+| `iperf3_sent_packets` | Total sent packets for the last UDP test run (UDP mode only) | `target`, `port`, `protocol`, `reverse_mode` |
+| `iperf3_sent_jitter_ms` | Jitter in milliseconds for sent packets (UDP mode only) | `target`, `port`, `protocol`, `reverse_mode` |
+| `iperf3_lost_packets` | Total lost packets for the last UDP test run (UDP mode only) | `target`, `port`, `protocol`, `reverse_mode` |
+| `iperf3_lost_percent` | Percentage of packets lost for the last UDP test run (UDP mode only) | `target`, `port`, `protocol`, `reverse_mode` |
 
 Additionally, the exporter provides metrics about itself:
 
@@ -265,7 +261,7 @@ Examples:
 
 ### Development Prerequisites
 
-- Go 1.24 or higher
+- Go 1.25 or higher
 - iperf3 installed on your system
 
 ### Project Structure
