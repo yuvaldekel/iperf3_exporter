@@ -59,3 +59,15 @@ jobs:
     steps:
       - uses: actions/checkout@v6
       - uses: actions/dependency-review-action@v4
+
+  review:
+    if: github.event_name == 'pull_request' && github.base_ref == 'main'
+    runs-on: ubuntu-latest
+  steps:
+      - name: PR Agent Action
+        uses: qodo-ai/pr-agent@main
+        env:
+          OPENAI_KEY: ${{ secrets.OPENAI_API_KEY }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Optional: Tell the AI what to focus on
+          PR_REVIEWER.EXTRA_INSTRUCTIONS: "Focus on security code ceonvention best practice code structure and logic errors."
