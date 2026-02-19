@@ -68,6 +68,6 @@ jobs:
         uses: qodo-ai/pr-agent@main
         env:
           OPENAI_KEY: ${{ secrets.OPENAI_API_KEY }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          # Optional: Tell the AI what to focus on
+          GITHUB_TOKEN: ${{ secrets.RELEASE_PLEASE_TOKEN }}
           PR_REVIEWER.EXTRA_INSTRUCTIONS: "Focus on security code ceonvention best practice code structure and logic errors."
+          GITHUB_ACTION.HANDLE_PR_ACTIONS: "['opened', 'reopened', 'synchronize']"
