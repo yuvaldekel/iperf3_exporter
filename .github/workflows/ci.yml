@@ -72,8 +72,8 @@ jobs:
         uses: qodo-ai/pr-agent@main
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          CONFIG__MODEL: "gpt-4.1-nano"
-          CONFIG__FALLBACK_MODELS: '["gpt-3.5-turbo"]'
+          CONFIG__MODEL: "gemini/gemini-2.5-flash"
+          CONFIG__FALLBACK_MODELS: '["gemini/gemini-2.5-flash"]'
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           OPENAI_KEY: ${{ secrets.OPENAI_API_KEY }}
           GITHUB_ACTION_CONFIG__AUTO_REVIEW: "true"
