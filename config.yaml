@@ -13,6 +13,6 @@ tlsKey: server.key
 targets:
   - target: www.example.com
     port: 5201
-    intevral: 1h
+    interval: 1h
     protocol: tcp
     period: 10s
