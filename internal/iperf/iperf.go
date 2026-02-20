@@ -162,7 +162,8 @@ func Run(ctx context.Context, cfg Config) Result {
 func (r *DefaultRunner) Run(ctx context.Context, cfg Config) Result {
 	// Create a result with default values
 	result := Result{
-		Success:     false,
+		Success:  false,
++		Protocol: cfg.Protocol,
 	}
 
 	// Validate bitrate if provided
