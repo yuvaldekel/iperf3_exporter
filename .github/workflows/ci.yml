@@ -67,10 +67,9 @@ jobs:
       - name: PR Agent Action
         uses: qodo-ai/pr-agent@main
         env:
-          OPENAI_KEY: ${{ secrets.OPENAI_API_KEY }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          CONFIG__MODEL: "gemini/gemini-1.5-flash"
           GITHUB_TOKEN: ${{ secrets.RELEASE_PLEASE_TOKEN }}
           PR_REVIEWER.EXTRA_INSTRUCTIONS: "Focus on security code ceonvention best practice code structure and logic errors."
           GITHUB_ACTION_CONFIG.AUTO_REVIEW: true
-          GITHUB_ACTION_CONFIG.AUTO_DESCRIBE: true
-          GITHUB_ACTION_CONFIG.AUTO_IMPROVE: false
           GITHUB_ACTION_CONFIG.PR_ACTIONS: "['opened', 'reopened', 'synchronize']"
