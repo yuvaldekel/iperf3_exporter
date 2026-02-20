@@ -104,7 +104,7 @@ func (s *Server) Start() error {
 	mux.HandleFunc("/debug/pprof/heap", http.DefaultServeMux.ServeHTTP)
 
 	// Start target collectors in the background
-	go s.runTargetCollectors(ctx, *wg)
+	go s.runTargetCollectors(ctx, &wg)
 
 	// Create HTTP server
 	s.server = &http.Server{
@@ -184,7 +184,7 @@ func (s *Server) runTargetCollector(ctx context.Context, targetConfig collector.
 	for {
 		select {
 		case <-ctx.Done():
-			s.logger.Info("Shutting down collector", "target", targetConfig.target)
+			s.logger.Info("Shutting down collector", "target", targetConfig.Target)
 			return 
 		case <-ticker.C:
 			s.executeTargetCollector(targetConfig, registry)
