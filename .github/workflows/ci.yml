@@ -72,10 +72,10 @@ jobs:
         uses: qodo-ai/pr-agent@main
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          CONFIG__MODEL: "gemini/gemini-3-flash"
-          CONFIG__FALLBACK_MODELS: '["gemini/gemini-3-flash"]'
+          CONFIG__MODEL: "gpt-4.1-nano"
+          CONFIG__FALLBACK_MODELS: '["gpt-4.1-mini"]'
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-          
+          OPENAI_KEY: ${{ secrets.OPENAI_API_KEY }}
           GITHUB_ACTION_CONFIG__AUTO_REVIEW: "true"
           PR_REVIEWER__EXTRA_INSTRUCTIONS: "Focus on security code ceonvention best practice code structure and logic errors."
           GITHUB_ACTION_CONFIG__PR_ACTIONS: "['opened', 'reopened', 'synchronize']"
