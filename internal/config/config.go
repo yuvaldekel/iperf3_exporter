@@ -31,21 +31,21 @@ import (
 
 // Config represents the configuration file for the iperf3_exporter.
 type configFile struct {
-	listenAddress string 		  		   `yaml:"listenAddress" json:"listen_address"`
-	metricsPath   string		  		   `yaml:"metricsPath" json:"metrics_path"`
-	probePath     string		  		   `yaml:"probePath" json:"probe_path"`
-	tlsCrt		  string				   `yaml:"tlsCrt" json:"tls_crt"`
-	tlsKey  	  string				   `yaml:"tlsKey" json:"tls_key"`
-    interval      time.Duration   		   `yaml:"interval" json:"interval" validate:"gt=0"`
-	timeout       time.Duration	  		   `yaml:"timeout" json:"timeout"`
+	ListenAddress string 		  		   `yaml:"listenAddress" json:"listen_address"`
+	MetricsPath   string		  		   `yaml:"metricsPath" json:"metrics_path"`
+	ProbePath     string		  		   `yaml:"probePath" json:"probe_path"`
+	TLSCrt		  string				   `yaml:"tlsCrt" json:"tls_crt"`
+	TLSKey  	  string				   `yaml:"tlsKey" json:"tls_key"`
+    Interval      time.Duration   		   `yaml:"interval" json:"interval" validate:"gt=0"`
+	Timeout       time.Duration	  		   `yaml:"timeout" json:"timeout"`
 
 	// Logging configuration for the exporter
-	logging	struct {
-		level 	  string				   `yaml:"level" json:"level"`
-		format	  string				   `yaml:"format" json:"format"`
+	Logging	struct {
+		Level 	  string				   `yaml:"level" json:"level"`
+		Format	  string				   `yaml:"format" json:"format"`
 	} 									   `yaml:"logging"`
 
-	targets 	  []collector.TargetConfig `yaml:"targets" json:"targets" validate:"dive" default:"[]"` 
+	Targets 	  []collector.TargetConfig `yaml:"targets" json:"targets" validate:"dive" default:"[]"` 
 }
 
 type argsConfig struct {
@@ -77,20 +77,20 @@ func validateBitrate(fl validator.FieldLevel) bool {
 // newConfig creates a new Config with default values.
 func newConfig() *configFile {
 	return &configFile{
-		listenAddress: "9579",
-		metricsPath:   "/metrics",
-		probePath:     "/probe",
-		tlsCrt: 	   "",
-		tlsKey: 	   "",
-		timeout:       30 * time.Second,
-		targets: 	  []collector.TargetConfig{},
-		interval:	  3600 * time.Second,
-		logging: struct {
-			level  string `yaml:"level" json:"level"`
-			format string `yaml:"format" json:"format"`
+		ListenAddress: "9579",
+		MetricsPath:   "/metrics",
+		ProbePath:     "/probe",
+		TLSCrt: 	   "",
+		TLSKey: 	   "",
+		Timeout:       30 * time.Second,
+		Targets: 	  []collector.TargetConfig{},
+		Interval:	  3600 * time.Second,
+		Logging: struct {
+			Level  string `yaml:"level" json:"level"`
+			Format string `yaml:"format" json:"format"`
 		}{
-			level:  "info",
-			format: "logfmt",
+			Level:  "info",
+			Format: "logfmt",
 		},
 	}
 }
@@ -109,7 +109,7 @@ func LoadConfig() *Config {
 	// Initialize logger
 	var logLevelSlog slog.Level
 
-	switch configFile.logging.level {
+	switch configFile.Logging.Level {
 	case "debug":
 		logLevelSlog = slog.LevelDebug
 	case "info":
@@ -123,7 +123,7 @@ func LoadConfig() *Config {
 	}
 
 	var handler slog.Handler
-	if configFile.logging.format == "json" {
+	if configFile.Logging.Format == "json" {
 		handler = slog.NewJSONHandler(os.Stderr, &slog.HandlerOptions{Level: logLevelSlog})
 	} else {
 		handler = slog.NewTextHandler(os.Stderr, &slog.HandlerOptions{Level: logLevelSlog})
@@ -132,11 +132,11 @@ func LoadConfig() *Config {
 	logger := slog.New(handler)
 
 	cfg := &Config{
-		ListenAddress: configFile.listenAddress,
-		MetricsPath:   configFile.metricsPath,
-		ProbePath:     configFile.probePath,
-		Timeout:       configFile.timeout,
-		Targets: 	   configFile.targets,
+		ListenAddress: configFile.ListenAddress,
+		MetricsPath:   configFile.MetricsPath,
+		ProbePath:     configFile.ProbePath,
+		Timeout:       configFile.Timeout,
+		Targets: 	   configFile.Targets,
 		Logger:        logger,
 	}
 	
@@ -206,39 +206,39 @@ func loadConfigFromFile(path string, cfg *configFile, argsCfg *argsConfig) error
 
 	// load env and args values if set
 	if argsCfg.listenAddress != "" {
-		cfg.listenAddress = argsCfg.listenAddress
+		cfg.ListenAddress = argsCfg.listenAddress
 	}
 	if argsCfg.metricsPath != "" {
-		cfg.metricsPath = argsCfg.metricsPath
+		cfg.MetricsPath = argsCfg.metricsPath
 	}
 	if argsCfg.probePath != "" {
-		cfg.probePath = argsCfg.probePath
+		cfg.ProbePath = argsCfg.probePath
 	}
 	if argsCfg.timeout != 0 {
-		cfg.metricsPath = argsCfg.metricsPath
+		cfg.MetricsPath = argsCfg.metricsPath
 	}
 	if argsCfg.loggingFormat != "" {
-		cfg.logging.format = argsCfg.loggingFormat
+		cfg.Logging.Format = argsCfg.loggingFormat
 	}
 	if argsCfg.loggingLevel != "" {
-		cfg.logging.level = argsCfg.loggingLevel
+		cfg.Logging.Level = argsCfg.loggingLevel
 	}
 
-	for i := range cfg.targets {
-        if cfg.targets[i].Port == 0 {
-            cfg.targets[i].Port = 5201
+	for i := range cfg.Targets {
+        if cfg.Targets[i].Port == 0 {
+            cfg.Targets[i].Port = 5201
         }
-        if cfg.targets[i].Protocol == "" {
-            cfg.targets[i].Protocol = "tcp"
+        if cfg.Targets[i].Protocol == "" {
+            cfg.Targets[i].Protocol = "tcp"
         }
-        if cfg.targets[i].Period == 0 {
-            cfg.targets[i].Period = 5 * time.Second
+        if cfg.Targets[i].Period == 0 {
+            cfg.Targets[i].Period = 5 * time.Second
         }
-        if cfg.targets[i].Interval == 0 {
-            cfg.targets[i].Interval = cfg.interval
+        if cfg.Targets[i].Interval == 0 {
+            cfg.Targets[i].Interval = cfg.Interval
         }
-        if cfg.targets[i].Timeout == 0 {
-            cfg.targets[i].Timeout = cfg.timeout
+        if cfg.Targets[i].Timeout == 0 {
+            cfg.Targets[i].Timeout = cfg.Timeout
         }
 	}
 
