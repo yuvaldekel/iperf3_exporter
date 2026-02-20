@@ -21,6 +21,7 @@ import (
 	"net/http"
 	_ "net/http/pprof"
 	"strconv"
+	"sync"
 	"time"
 
 	"github.com/yuvaldekel/iperf3_exporter/internal/collector"
@@ -61,6 +62,8 @@ func New(cfg *config.Config) *Server {
 
 // Start starts the HTTP server.
 func (s *Server) Start() error {
+	var wg sync.WaitGroup
+
 	// Register version and process collectors
 	prometheus.MustRegister(versioncollector.NewCollector("iperf3_exporter"))
 	prometheus.MustRegister(collectors.NewBuildInfoCollector())
@@ -120,6 +123,7 @@ func (s *Server) Start() error {
 		}
 	}
 	
+	wg.Wait()
 	return nil
 }
 
@@ -133,7 +137,7 @@ func (s *Server) Stop(ctx context.Context) error {
 // runTargetCollectors runs all configured target collectors continuously.
 // Each target collector runs on its own interval as specified in the Interval field.
 // This method runs forever in a goroutine.
-func (s *Server) runTargetCollectors() {
+func (s *Server) runTargetCollectors(ctx context.Context, wg *sync.WaitGroup) {
 	if len(s.config.Targets) == 0 {
 		s.logger.Info("No targets configured, skipping target collectors")
 		return
@@ -143,12 +147,17 @@ func (s *Server) runTargetCollectors() {
 
 	// Create a goroutine for each target
 	for _, targetConfig := range s.config.Targets {
-		go s.runTargetCollector(targetConfig)
+		wg.Add(1)
+
+		go func(cfg TargetConfig) {
+			defer wg.Done()
+			s.runTargetCollector(ctx, cfg)
+		}(targetConfig)
 	}
 }
 
 // runTargetCollector runs a single target collector on its configured interval forever.
-func (s *Server) runTargetCollector(targetConfig collector.TargetConfig) {
+func (s *Server) runTargetCollector(ctx context.Context, targetConfig collector.TargetConfig) {
 	s.logger.Info("Target collector started", "target", targetConfig.Target, "port", targetConfig.Port, "interval", targetConfig.Interval)
 
 	// Create a ticker with the target's interval
@@ -165,11 +174,16 @@ func (s *Server) runTargetCollector(targetConfig collector.TargetConfig) {
 	// Run the collector immediately on startup
 	s.executeTargetCollector(targetConfig, registry)
 
-	// Then run it on the interval
-	for range ticker.C {
-		s.executeTargetCollector(targetConfig, registry)
+	// Run it on the interval
+	for {
+		select {
+		case <-ctx.Done():
+			s.logger.Info("Shutting down collector", "target", targetConfig.target)
+			return 
+		case <-ticker.C:
+			s.executeTargetCollector(targetConfig, registry)
+		}
 	}
-
 }
 
 // executeTargetCollector executes the collector for a single target and records metrics.
