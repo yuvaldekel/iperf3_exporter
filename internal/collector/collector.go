@@ -55,7 +55,7 @@ type TargetConfig struct {
     Protocol    string          `yaml:"protocol"    validate:"required,oneof=tcp udp"`
     Bitrate     string          `yaml:"bitrate"     validate:"bitrate"` 
     Bind        string          `yaml:"bind"`
-    Interval    time.Duration   `yaml:"interval"    validate:"required,gt=0"`
+    Interval    time.Duration   `yaml:"interval"    validate:"gt=0"`
 }
 
 // Collector implements the prometheus.Collector interface for iperf3 metrics.
