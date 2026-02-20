@@ -72,7 +72,7 @@ jobs:
         uses: qodo-ai/pr-agent@main
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          CONFIG__MODEL: "gemini/gemini-2.5-flash"
+          CONFIG__MODEL: "gemini/gemini-3-flash"
           CONFIG__FALLBACK_MODELS: '["gemini/gemini-3-flash"]'
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           
