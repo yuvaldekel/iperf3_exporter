@@ -56,6 +56,7 @@ func TestProbeEndpoint(t *testing.T) {
 			ReceivedBytes:         5242880,
 			ReceivedBitsPerSecond: 8388608,
 			Retransmits:           0,
+			Protocol: 			   "tcp",
 		},
 	}
 
@@ -337,8 +338,9 @@ func TestProbeEndpoint(t *testing.T) {
 		// Create a mock runner that returns a failure
 		failedRunner := &MockRunner{
 			Result: iperf.Result{
-				Success: false,
-				Error:   fmt.Errorf("iperf3 test failed"),
+				Success:  false,
+				Protocol: "tcp",
+				Error:    fmt.Errorf("iperf3 test failed"),
 			},
 		}
 
