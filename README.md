@@ -104,7 +104,7 @@ tlsKey: server.key
 targets:
   - target: www.example.com
     port: 5201
-    inteval: 1h
+    interval: 1h
     protocol: tcp
     period: 10s
 ```
