@@ -215,7 +215,7 @@ func loadConfigFromFile(path string, cfg *configFile, argsCfg *argsConfig) error
 		cfg.ProbePath = argsCfg.probePath
 	}
 	if argsCfg.timeout != 0 {
-		cfg.MetricsPath = argsCfg.metricsPath
+		cfg.Timeout = argsCfg.timeout
 	}
 	if argsCfg.loggingFormat != "" {
 		cfg.Logging.Format = argsCfg.loggingFormat

@@ -109,7 +109,7 @@ func (s *Server) Start() error {
 	
 	listenAddr := s.config.ListenAddress
 	if !strings.Contains(listenAddr, ":") {
-		listenAddr = ":" + listenAddr // Prepend colon if only a port is provided
+		listenAddr = ":" + listenAddr
 	}
 
 	// Create HTTP server
