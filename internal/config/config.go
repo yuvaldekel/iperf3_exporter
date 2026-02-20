@@ -98,7 +98,7 @@ func LoadConfig() *Config {
 	kingpin.Parse()
 
 	// Load configuration from file if specified
-	if err := loadConfigFromFile(configFilePath, configFile); err != nil {
+	if err := loadConfigFromFile(configFilePath, *configFile); err != nil {
 		log.Fatalf("Error loading configuration from file: %v", err)
 	}
 		
