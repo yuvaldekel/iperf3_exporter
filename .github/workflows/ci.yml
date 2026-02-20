@@ -61,6 +61,10 @@ jobs:
       - uses: actions/dependency-review-action@v4
 
   code-review:
+    needs:
+      - lint
+      - build
+      - test
     if: github.event_name == 'pull_request' && github.base_ref == 'main'
     runs-on: ubuntu-latest
     steps:
