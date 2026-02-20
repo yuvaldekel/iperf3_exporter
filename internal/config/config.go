@@ -151,7 +151,7 @@ func LoadConfig() *Config {
 
 // ParseFlags parses the command line flags and returns a Config.
 func parseFlags() (string, *argsConfig){
-	argsConfig := *argsConfig{}
+	argsConfig := new(argsConfig)
 
 	// Define command-line flags
 	configFilePath := kingpin.Flag("config", "Path to the configuration file").
@@ -224,7 +224,7 @@ func loadConfigFromFile(path string, cfg *configFile, argsCfg *argsConfig) error
 		cfg.logging.level = argsCfg.loggingLevel
 	}
 
-	for i := range cfg.Targets {
+	for i := range cfg.targets {
         if cfg.targets[i].Port == 0 {
             cfg.targets[i].Port = 5201
         }
@@ -237,8 +237,8 @@ func loadConfigFromFile(path string, cfg *configFile, argsCfg *argsConfig) error
         if cfg.targets[i].Interval == 0 {
             cfg.targets[i].Interval = cfg.interval
         }
-        if cfg.Targets[i].Timeout == 0 {
-            cfg.Targets[i].Timeout = cfg.timeout
+        if cfg.targets[i].Timeout == 0 {
+            cfg.targets[i].Timeout = cfg.timeout
         }
 	}
 
