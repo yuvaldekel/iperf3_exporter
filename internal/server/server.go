@@ -105,10 +105,14 @@ func (s *Server) Start() error {
 
 	// Start target collectors in the background
 	go s.runTargetCollectors(ctx, &wg)
-
-	// Create HTTP server
+	
+	listenAddr := s.config.ListenAddress
+	if !strings.Contains(listenAddr, ":") {
+		listenAddr = ":" + listenAddr // Prepend colon if only a port is provided
+	
+		// Create HTTP server
 	s.server = &http.Server{
-		Addr:         ":" + s.config.ListenAddress,
+		Addr:         listenAddr,
 		Handler:      handler,
 		ReadTimeout:  60 * time.Second,
 		WriteTimeout: 60 * time.Second,

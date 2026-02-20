@@ -99,7 +99,7 @@ func LoadConfig() *Config {
 
 	// Load configuration from file if specified
 	if err := loadConfigFromFile(*configFilePath, configFile); err != nil {
-		log.Fatalf("Error loading configuration from file: %v", err)
+		log.Fatalf("Error loading configuration from file %s: %v", *configFilePath, err)
 	}
 		
 	parseFlags(configFile)
