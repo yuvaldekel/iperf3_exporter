@@ -117,8 +117,8 @@ const LandingPageTemplate = `
             </tr>
             <tr>
                 <td>protocol</td>
-                <td>Run iperf3 in UDP or TCP protocol default to TCP</td>
-                <td>false</td>
+                <td>Run iperf3 in UDP or TCP protocol</td>
+                <td>tcp</td>
             </tr>
             <tr>
                 <td>bitrate</td>
@@ -146,7 +146,7 @@ scrape_configs:
       # Optional: enable reverse mode
       # reverse_mode: ['true']
       # Optional: protocol to use tcp or udp default to tcp
-      # udp_mode: ['tcp']
+      # protocol: ['tcp']
       # Optional: set bitrate limit
       # bitrate: ['100M']
       # Optional: set test period
