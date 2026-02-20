@@ -89,12 +89,20 @@ func newConfig() *ConfigFile {
 // LoadConfig loads the configuration from command-line flags and optionally from a configuration file.
 func LoadConfig() *Config {
 	configFile := newConfig()
-	configPath := parseFlags(configFile)
+
+	configFilePath := kingpin.Flag("config", "Path to the configuration file").
+        Envar("IPERF3_EXPORTER_CONFIG_FILE").
+        Default("config.yaml").
+		String()
+	
+	kingpin.Parse()
 
 	// Load configuration from file if specified
-	if err := loadConfigFromFile(configPath, configFile); err != nil {
+	if err := loadConfigFromFile(configFilePath, configFile); err != nil {
 		log.Fatalf("Error loading configuration from file: %v", err)
 	}
+		
+	parseFlags(configFile)
 
 	// Initialize logger
 	var logLevelSlog slog.Level
@@ -140,14 +148,9 @@ func LoadConfig() *Config {
 }
 
 // ParseFlags parses the command line flags and returns a Config.
-func parseFlags(cfg *ConfigFile) string {
+func parseFlags(cfg *ConfigFile) {
 
 	// Define command-line flags
-	configFilePath := kingpin.Flag("config", "Path to the configuration file").
-        Envar("IPERF3_EXPORTER_CONFIG_FILE").
-        Default("config.yaml").
-		String()
-
 	kingpin.Flag("listen-address", "Port to listen on").
         Envar("IPERF3_EXPORTER_PORT").
         Default(cfg.ListenAddress).StringVar(&cfg.ListenAddress)
@@ -175,8 +178,6 @@ func parseFlags(cfg *ConfigFile) string {
 	kingpin.HelpFlag.Short('h')
 
 	kingpin.Parse()
-
-	return *configFilePath
 }
 
 // loadConfigFromFile loads the configuration from the specified file path into the provided Config struct.
