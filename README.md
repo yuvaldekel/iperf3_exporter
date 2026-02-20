@@ -18,6 +18,26 @@ The iPerf3 exporter allows iPerf3 probing of endpoints for Prometheus monitoring
 - Health and readiness endpoints for monitoring
 - Prometheus metrics for exporter itself
 
+___
+
+### Diagram Walkthrough
+
+
+```mermaid
+flowchart LR
+  User_Prometheus["User/Prometheus"] -- "Scrapes /metrics" --> Server
+  Server -- "Loads Config" --> ConfigFile["Configuration File"]
+  ConfigFile -- "Defines Targets" --> TargetConfig["Target Configuration"]
+  TargetConfig -- "Schedules Probes" --> Collector
+  Collector -- "Runs iperf3" --> IperfRunner["iperf.Runner"]
+  IperfRunner -- "Returns Results" --> Collector
+  Collector -- "Updates Cache" --> MetricsCache["Metrics Cache"]
+  MetricsCache -- "Serves Metrics" --> Server
+```
+
+___
+
+
 ## Installation
 
 ### From Binaries
