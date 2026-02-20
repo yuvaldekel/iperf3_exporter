@@ -1,4 +1,4 @@
-// Copyright 2019 Edgard Castro
+// Copyright 2026 Yuval Dekel
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -21,14 +21,14 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/edgard/iperf3_exporter/internal/config"
-	"github.com/edgard/iperf3_exporter/internal/iperf"
-	"github.com/edgard/iperf3_exporter/internal/server"
+	"github.com/yuvaldekel/iperf3_exporter/internal/config"
+	"github.com/yuvaldekel/iperf3_exporter/internal/iperf"
+	"github.com/yuvaldekel/iperf3_exporter/internal/server"
 )
 
 func main() {
 	// Parse command line flags
-	cfg := config.ParseFlags()
+	cfg := config.LoadConfig()
 
 	// Log version and build information
 	cfg.Logger.Info("Starting iperf3 exporter")

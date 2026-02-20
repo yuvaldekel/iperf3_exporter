@@ -1,12 +1,16 @@
 name: CI
 
 on:
+  push:
+    branches:
+      - '*'
+      - '!main'
   pull_request:
-    branches: [master]
+    branches: [main]
 
 permissions:
   contents: read
-  pull-requests: read
+  pull-requests: write
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -50,7 +54,28 @@ jobs:
       - run: go build -v ./...
 
   dependency-review:
+    if: github.event_name == 'pull_request' && github.base_ref == 'main'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
       - uses: actions/dependency-review-action@v4
+
+  code-review:
+    needs:
+      - lint
+      - build
+      - test
+    if: github.event_name == 'pull_request' && github.base_ref == 'main'
+    runs-on: ubuntu-latest
+    steps:
+      - name: PR Agent Action
+        uses: qodo-ai/pr-agent@main
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CONFIG__MODEL: "gemini/gemini-3-pro-preview"
+          CONFIG__FALLBACK_MODELS: '["gemini/gemini-2.5-flash"]'
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          OPENAI_KEY: ${{ secrets.OPENAI_API_KEY }}
+          GITHUB_ACTION_CONFIG__AUTO_REVIEW: "true"
+          PR_REVIEWER__EXTRA_INSTRUCTIONS: "Focus on security code ceonvention best practice code structure and logic errors."
+          GITHUB_ACTION_CONFIG__PR_ACTIONS: "['opened', 'reopened', 'synchronize']"

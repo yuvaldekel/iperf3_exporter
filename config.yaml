@@ -1,0 +1,18 @@
+listenAddress: 8080
+metricsPath: /metrics
+probePath: /probe
+timeout: 30s
+
+logging:
+  level: info
+  format: logfmt
+
+tlsCrt: server.crt
+tlsKey: server.key
+
+targets:
+  - target: www.example.com
+    port: 5201
+    interval: 1h
+    protocol: tcp
+    period: 10s

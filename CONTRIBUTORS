@@ -4,10 +4,11 @@ This file lists the contributors to the iperf3_exporter project.
 
 ## Maintainer
 
-* Edgard Castro (edgard) - Repository owner and main contributor
+* Yuval Dekel (yuvaldekel) - Repository owner and main contributor
 
 ## Contributors
 
+* Edgard Castro (edgard) - Original repository owner
 * Cooper Lees (cooperlees) - Added reverse_mode GET parameter
 * Himura Kazuto (Himura2la) - Added query for bandwidth and build go binary in Docker
 * Marcel Aust (Marcel2508) - Added retransmissions to probe endpoint

@@ -2,13 +2,9 @@
 
 A Prometheus exporter for iPerf3 network performance metrics.
 
-[![Go Report Card](https://goreportcard.com/badge/github.com/edgard/iperf3_exporter)](https://goreportcard.com/report/github.com/edgard/iperf3_exporter)
-[![Docker Pulls](https://img.shields.io/docker/pulls/ghcr.io/edgard/iperf3_exporter.svg)](https://github.com/users/edgard/packages/container/package/iperf3_exporter)
-[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://github.com/edgard/iperf3_exporter/blob/master/LICENSE)
-
-## ⚠️ IMPORTANT: Docker Image Name Change
-
-**The Docker image has moved to GitHub Container Registry (ghcr.io) and the name has changed from `iperf3-exporter` to `iperf3_exporter` following GitHub's naming standards. If you were using the old image name, please update your references.**
+[![Go Report Card](https://goreportcard.com/badge/github.com/yuvaldekel/iperf3_exporter)](https://goreportcard.com/report/github.com/yuvaldekel/iperf3_exporter)
+[![Docker Pulls](https://img.shields.io/docker/pulls/ghcr.io/yuvaldekel/iperf3_exporter.svg)](https://github.com/users/yuvaldekel/packages/container/package/iperf3_exporter)
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://github.com/yuvaldekel/iperf3_exporter/blob/master/LICENSE)
 
 The iPerf3 exporter allows iPerf3 probing of endpoints for Prometheus monitoring, enabling you to measure network performance metrics like bandwidth, jitter, and packet loss.
 
@@ -17,21 +13,40 @@ The iPerf3 exporter allows iPerf3 probing of endpoints for Prometheus monitoring
 - Measure network bandwidth between hosts
 - Monitor network performance over time
 - Support for both TCP and UDP tests
-- Configurable test parameters (duration, bitrate, etc.)
+- Configurable test parameters (protocol, duration, bitrate, etc.)
 - TLS support for secure communication
-- Basic authentication for access control
 - Health and readiness endpoints for monitoring
 - Prometheus metrics for exporter itself
+
+___
+
+### Diagram Walkthrough
+
+
+```mermaid
+flowchart LR
+  User_Prometheus["User/Prometheus"] -- "Scrapes /metrics" --> Server
+  Server -- "Loads Config" --> ConfigFile["Configuration File"]
+  ConfigFile -- "Defines Targets" --> TargetConfig["Target Configuration"]
+  TargetConfig -- "Schedules Probes" --> Collector
+  Collector -- "Runs iperf3" --> IperfRunner["iperf.Runner"]
+  IperfRunner -- "Returns Results" --> Collector
+  Collector -- "Updates Cache" --> MetricsCache["Metrics Cache"]
+  MetricsCache -- "Serves Metrics" --> Server
+```
+
+___
+
 
 ## Installation
 
 ### From Binaries
 
-Download the most suitable binary for your platform from [the releases tab](https://github.com/edgard/iperf3_exporter/releases).
+Download the most suitable binary for your platform from [the releases tab](https://github.com/yuvaldekel/iperf3_exporter/releases).
 
 ```bash
 # Download (replace VERSION and PLATFORM with appropriate values)
-curl -L -o iperf3_exporter https://github.com/edgard/iperf3_exporter/releases/download/VERSION/iperf3_exporter-VERSION.PLATFORM
+curl -L -o iperf3_exporter https://github.com/yuvaldekel/iperf3_exporter/releases/download/VERSION/iperf3_exporter-VERSION.PLATFORM
 
 # Make executable
 chmod +x iperf3_exporter
@@ -45,7 +60,7 @@ chmod +x iperf3_exporter
 ### Using Docker
 
 ```bash
-docker run --rm -d -p 9579:9579 --name iperf3_exporter ghcr.io/edgard/iperf3_exporter:latest
+docker run --rm -d -p 9579:9579 --name iperf3_exporter ghcr.io/yuvaldekel/iperf3_exporter:latest
 ```
 
 The Docker images are available for multiple architectures (amd64, arm64) and are published to GitHub Container Registry.
@@ -54,7 +69,7 @@ The Docker images are available for multiple architectures (amd64, arm64) and ar
 
 ```bash
 # Clone repository
-git clone https://github.com/edgard/iperf3_exporter.git
+git clone https://github.com/yuvaldekel/iperf3_exporter.git
 cd iperf3_exporter
 
 # Build
@@ -76,30 +91,42 @@ go build -o iperf3_exporter ./cmd/iperf3_exporter
 
 iPerf3 exporter is configured via command-line flags:
 
-| Flag | Description | Default |
-|------|-------------|---------|
-| `--web.listen-address` | Addresses on which to expose metrics and web interface (repeatable) | `:9579` |
-| `--web.telemetry-path` | Path under which to expose metrics | `/metrics` |
-| `--web.probe-path` | Path under which to expose the probe endpoint | `/probe` |
-| `--iperf3.timeout` | iperf3 run timeout | `30s` |
-| `--web.config.file` | Path to configuration file that can enable TLS or authentication | |
-| `--web.systemd-socket` | Use systemd socket activation listeners instead of port listeners (Linux only) | `false` |
-| `--log.level` | Only log messages with the given severity or above | `info` |
-| `--log.format` | Output format of log messages | `logfmt` |
+| Flag | environment variables | Description | Default |
+|------|-----------------------|-------------|---------|
+| `--config` | `IPERF3_EXPORTER_CONFIG_FILE` | Path to configuration file that can enable TLS or authentication | `config.yaml` |
+| `--listen-address` | `IPERF3_EXPORTER_PORT` | Addresses on which to expose metrics and web interface (repeatable) | `9579` |
+| `--mtrics-path` | - | Path under which to expose metrics | `/metrics` |
+| `--probe-path` | - | Path under which to expose the probe endpoint | `/probe` |
+| `--iperf3-timeout` | `IPERF3_EXPORTER_TIMEOUT` | iperf3 run timeout | `30s` |
+| `--log-level` | `IPERF3_EXPORTER_LOG_LEVEL` | Only log messages with the given severity or above | `info` |
+| `--log-format` | `IPERF3_EXPORTER_LOG_FORMAT` | Output format of log messages | `logfmt` |
 
 #### Web Configuration File
 
-The exporter supports a configuration file for TLS and authentication settings. This file is specified with the `--web.config.file` flag.
+The exporter supports a configuration file for TLS and authentication settings. This file is specified with the `--config` flag.
 
 Example configuration file:
 
 ```yaml
-tls_server_config:
-  cert_file: server.crt
-  key_file: server.key
+listenAddress: 8080
+metricsPath: /metrics
+probePath: /probe
+timeout: 30s
 
-basic_auth_users:
-  username: password
+logging:
+  level: info
+  format: logfmt
+
+tlsCrt: server.crt
+tlsKey: server.key
+
+# List of targets that will be scraped constently
+targets:
+  - target: www.example.com
+    port: 5201
+    interval: 1h
+    protocol: tcp
+    period: 10s
 ```
 
 For more details on the web configuration file format, see the [exporter-toolkit documentation](https://github.com/prometheus/exporter-toolkit/blob/master/docs/web-configuration.md).
@@ -116,17 +143,17 @@ The timeout for each iperf3 probe is determined by the following logic:
 
 1. **Prometheus scrape timeout**: When Prometheus or compatible systems (e.g., VictoriaMetrics) scrape the exporter, they send the `X-Prometheus-Scrape-Timeout-Seconds` header containing the configured `scrape_timeout` value.
 
-2. **Configured timeout limit**: The `--iperf3.timeout` flag acts as an **upper limit**. If set, it restricts the effective timeout to be no larger than this value, regardless of the Prometheus scrape timeout.
+2. **Configured timeout limit**: The `--iperf3-timeout` flag acts as an **upper limit**. If set, it restricts the effective timeout to be no larger than this value, regardless of the Prometheus scrape timeout.
 
-3. **Default timeout**: If neither the Prometheus header nor `--iperf3.timeout` is provided, the timeout defaults to 30 seconds.
+3. **Default timeout**: If neither the Prometheus header nor `--iperf3-timeout` is provided, the timeout defaults to 30 seconds.
 
 4. **Timeout offset**: A small offset (0.5 seconds) is subtracted from the Prometheus timeout to ensure the exporter finishes before Prometheus gives up, allowing for network delays and cleaner error handling.
 
 **Examples:**
-- Prometheus `scrape_timeout: 60s`, `--iperf3.timeout=10s` → **Effective timeout: 10s** (configured limit applied)
-- Prometheus `scrape_timeout: 30s`, `--iperf3.timeout` not set → **Effective timeout: 29.5s** (header value minus offset)
-- No Prometheus header, `--iperf3.timeout=15s` → **Effective timeout: 15s** (configured value used)
-- No Prometheus header, `--iperf3.timeout` not set → **Effective timeout: 30s** (default)
+- Prometheus `scrape_timeout: 60s`, `--iperf3-timeout=10s` → **Effective timeout: 10s** (configured limit applied)
+- Prometheus `scrape_timeout: 30s`, `--iperf3-timeout` not set → **Effective timeout: 29.5s** (header value minus offset)
+- No Prometheus header, `--iperf3-timeout=15s` → **Effective timeout: 15s** (configured value used)
+- No Prometheus header, `--iperf3-timeout` not set → **Effective timeout: 30s** (default)
 
 This behavior ensures that the `--iperf3.timeout` flag can be used to enforce maximum test durations even when Prometheus is configured with longer scrape timeouts.
 
@@ -139,7 +166,7 @@ When making requests to the `/probe` endpoint, the following parameters can be u
 | `target` | Target host to probe (required) | - |
 | `port` | Port that the target iperf3 server is listening on | 5201 |
 | `reverse_mode` | Run iperf3 in reverse mode (server sends, client receives) | false |
-| `udp_mode` | Run iperf3 in UDP mode instead of TCP | false |
+| `protocol` | Run iperf3 in UDP or TCP protocol | TCP |
 | `bitrate` | Target bitrate in bits/sec (format: #[KMG][/#]). For UDP mode, iperf3 defaults to 1 Mbit/sec if not specified. | - |
 | `period` | Duration of the iperf3 test | 5s |
 | `bind` | Bind to a specific local IP address or interface | - |
@@ -165,8 +192,8 @@ scrape_configs:
       port: ['5201']
       # Optional: enable reverse mode
       # reverse_mode: ['true']
-      # Optional: enable UDP mode
-      # udp_mode: ['true']
+      # Optional: UDP or TCP
+      # protocol: ['tcp']
       # Optional: set bitrate limit
       # bitrate: ['100M']
       # Optional: set test period
@@ -188,16 +215,16 @@ The exporter provides the following metrics:
 
 | Metric | Description | Labels |
 |--------|-------------|--------|
-| `iperf3_up` | Was the last iperf3 probe successful (1 for success, 0 for failure) | `target`, `port` |
-| `iperf3_sent_seconds` | Total seconds spent sending packets | `target`, `port` |
-| `iperf3_sent_bytes` | Total sent bytes for the last test run | `target`, `port` |
-| `iperf3_received_seconds` | Total seconds spent receiving packets | `target`, `port` |
-| `iperf3_received_bytes` | Total received bytes for the last test run | `target`, `port` |
-| `iperf3_retransmits` | Total retransmits for the last test run (TCP mode only, omitted in UDP) | `target`, `port` |
-| `iperf3_sent_packets` | Total sent packets for the last UDP test run (UDP mode only) | `target`, `port` |
-| `iperf3_sent_jitter_ms` | Jitter in milliseconds for sent packets (UDP mode only) | `target`, `port` |
-| `iperf3_lost_packets` | Total lost packets for the last UDP test run (UDP mode only) | `target`, `port` |
-| `iperf3_lost_percent` | Percentage of packets lost for the last UDP test run (UDP mode only) | `target`, `port` |
+| `iperf3_up` | Was the last iperf3 probe successful (1 for success, 0 for failure) | `target`, `port`, `protocol`, `reverse_mode` |
+| `iperf3_sent_seconds` | Total seconds spent sending packets | `target`, `port`, `protocol`, `reverse_mode` |
+| `iperf3_sent_bytes` | Total sent bytes for the last test run | `target`, `port`, `protocol`, `reverse_mode` |
+| `iperf3_received_seconds` | Total seconds spent receiving packets | `target`, `port`, `protocol`, `reverse_mode` |
+| `iperf3_received_bytes` | Total received bytes for the last test run | `target`, `port`, `protocol`, `reverse_mode` |
+| `iperf3_retransmits` | Total retransmits for the last test run (TCP mode only, omitted in UDP) | `target`, `port`, `protocol`, `reverse_mode` |
+| `iperf3_sent_packets` | Total sent packets for the last UDP test run (UDP mode only) | `target`, `port`, `protocol`, `reverse_mode` |
+| `iperf3_sent_jitter_ms` | Jitter in milliseconds for sent packets (UDP mode only) | `target`, `port`, `protocol`, `reverse_mode` |
+| `iperf3_lost_packets` | Total lost packets for the last UDP test run (UDP mode only) | `target`, `port`, `protocol`, `reverse_mode` |
+| `iperf3_lost_percent` | Percentage of packets lost for the last UDP test run (UDP mode only) | `target`, `port`, `protocol`, `reverse_mode` |
 
 Additionally, the exporter provides metrics about itself:
 
@@ -234,6 +261,8 @@ avg_over_time((iperf3_sent_bytes / iperf3_sent_seconds * 8 / 1000000)[30m:])
 
 ## Contributing
 
+This project is froked from (https://github.com/edgard/iperf3_exporter)
+
 Contributions to the iperf3_exporter are welcome!
 
 This project follows the [Conventional Commits](https://www.conventionalcommits.org/) specification. When contributing, please format your commit messages according to this standard:
@@ -254,7 +283,7 @@ Examples:
 
 ### Development Prerequisites
 
-- Go 1.24 or higher
+- Go 1.25 or higher
 - iperf3 installed on your system
 
 ### Project Structure
@@ -323,4 +352,4 @@ go test ./...
 
 ## License
 
-This project is released under Apache License 2.0, see [LICENSE](https://github.com/edgard/iperf3_exporter/blob/master/LICENSE).
+This project is released under Apache License 2.0, see [LICENSE](https://github.com/yuvaldekel/iperf3_exporter/blob/master/LICENSE).

@@ -1,4 +1,4 @@
-// Copyright 2019 Edgard Castro
+// Copyright 2026 Yuval Dekel
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -18,19 +18,24 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
+	"os"
+	"os/signal"
 	"net/http"
 	_ "net/http/pprof"
+	"strings"
 	"strconv"
+	"sync"
+	"syscall"
 	"time"
 
-	"github.com/edgard/iperf3_exporter/internal/collector"
-	"github.com/edgard/iperf3_exporter/internal/config"
-	"github.com/edgard/iperf3_exporter/internal/iperf"
+	"github.com/yuvaldekel/iperf3_exporter/internal/collector"
+	"github.com/yuvaldekel/iperf3_exporter/internal/config"
+	"github.com/yuvaldekel/iperf3_exporter/internal/iperf"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/collectors"
+	"github.com/prometheus/common/version"
 	versioncollector "github.com/prometheus/client_golang/prometheus/collectors/version"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
-	"github.com/prometheus/exporter-toolkit/web"
 )
 
 const (
@@ -47,6 +52,7 @@ type Server struct {
 	config *config.Config
 	logger *slog.Logger
 	server *http.Server
+	metricsCache *collector.MetricsCache
 }
 
 // New creates a new Server.
@@ -54,17 +60,28 @@ func New(cfg *config.Config) *Server {
 	return &Server{
 		config: cfg,
 		logger: cfg.Logger,
+		metricsCache: collector.NewMetricsCache(),
 	}
 }
 
 // Start starts the HTTP server.
 func (s *Server) Start() error {
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer stop()
+
+	var wg sync.WaitGroup
+
 	// Register version and process collectors
 	prometheus.MustRegister(versioncollector.NewCollector("iperf3_exporter"))
 	prometheus.MustRegister(collectors.NewBuildInfoCollector())
 	prometheus.MustRegister(collector.IperfDuration)
 	prometheus.MustRegister(collector.IperfErrors)
 
+	gatherers := prometheus.Gatherers{
+        prometheus.DefaultGatherer,
+        s.metricsCache,
+    }
+	
 	// Create router
 	mux := http.NewServeMux()
 
@@ -73,7 +90,7 @@ func (s *Server) Start() error {
 	handler = s.withLogging(handler)
 
 	// Register handlers
-	mux.Handle(s.config.MetricsPath, promhttp.Handler())
+	mux.Handle(s.config.MetricsPath, promhttp.HandlerFor(gatherers, promhttp.HandlerOpts{}))
 	mux.HandleFunc(s.config.ProbePath, s.probeHandler)
 	mux.HandleFunc("/", s.indexHandler)
 	mux.HandleFunc("/health", s.healthHandler)
@@ -87,18 +104,38 @@ func (s *Server) Start() error {
 	mux.HandleFunc("/debug/pprof/trace", http.DefaultServeMux.ServeHTTP)
 	mux.HandleFunc("/debug/pprof/heap", http.DefaultServeMux.ServeHTTP)
 
+	// Start target collectors in the background
+	go s.runTargetCollectors(ctx, &wg)
+	
+	listenAddr := s.config.ListenAddress
+	if !strings.Contains(listenAddr, ":") {
+		listenAddr = ":" + listenAddr
+	}
+
 	// Create HTTP server
 	s.server = &http.Server{
+		Addr:         listenAddr,
 		Handler:      handler,
 		ReadTimeout:  60 * time.Second,
 		WriteTimeout: 60 * time.Second,
 	}
 
-	// Start server using exporter-toolkit
-	if err := web.ListenAndServe(s.server, s.config.WebConfig, s.logger); err != nil {
-		return fmt.Errorf("error starting server: %w", err)
-	}
+	s.logger.Info("Starting server", "address", s.config.ListenAddress)
 
+	// Check if TLS is configured
+	if s.config.TLSCrt != "" && s.config.TLSKey != "" {
+		s.logger.Info("TLS enabled", "cert", s.config.TLSCrt, "key", s.config.TLSKey)
+		if err := s.server.ListenAndServeTLS(s.config.TLSCrt, s.config.TLSKey); err != nil && err != http.ErrServerClosed {
+			return fmt.Errorf("error starting TLS server: %w", err)
+		}
+	} else {
+		// Start server using standard http library without TLS
+		if err := s.server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			return fmt.Errorf("error starting server: %w", err)
+		}
+	}
+	
+	wg.Wait()
 	return nil
 }
 
@@ -107,6 +144,85 @@ func (s *Server) Stop(ctx context.Context) error {
 	s.logger.Info("Stopping iperf3 exporter")
 
 	return s.server.Shutdown(ctx)
+}
+
+// runTargetCollectors runs all configured target collectors continuously.
+// Each target collector runs on its own interval as specified in the Interval field.
+// This method runs forever in a goroutine.
+func (s *Server) runTargetCollectors(ctx context.Context, wg *sync.WaitGroup) {
+	if len(s.config.Targets) == 0 {
+		s.logger.Info("No targets configured, skipping target collectors")
+		return
+	}
+
+	s.logger.Info("Starting target collectors", "target_count", len(s.config.Targets))
+
+	// Create a goroutine for each target
+	for _, targetConfig := range s.config.Targets {
+		wg.Add(1)
+
+		go func(targetConfig collector.TargetConfig) {
+			defer wg.Done()
+			s.runTargetCollector(ctx, targetConfig)
+		}(targetConfig)
+	}
+}
+
+// runTargetCollector runs a single target collector on its configured interval forever.
+func (s *Server) runTargetCollector(ctx context.Context, targetConfig collector.TargetConfig) {
+	s.logger.Info("Target collector started", "target", targetConfig.Target, "port", targetConfig.Port, "interval", targetConfig.Interval)
+
+	// Create a ticker with the target's interval
+	ticker := time.NewTicker(targetConfig.Interval)
+	defer ticker.Stop()
+
+	// Create a dedicated registry for this target
+	registry := prometheus.NewRegistry()
+
+	// Create collector with target configuration
+	c := collector.NewCollector(targetConfig, s.logger)
+	registry.MustRegister(c)
+
+	// Run the collector immediately on startup
+	s.executeTargetCollector(targetConfig, registry)
+
+	// Run it on the interval
+	for {
+		select {
+		case <-ctx.Done():
+			s.logger.Info("Shutting down collector", "target", targetConfig.Target)
+			return 
+		case <-ticker.C:
+			s.executeTargetCollector(targetConfig, registry)
+		}
+	}
+}
+
+// executeTargetCollector executes the collector for a single target and records metrics.
+func (s *Server) executeTargetCollector(targetConfig collector.TargetConfig, registry *prometheus.Registry) {
+	start := time.Now()
+
+	// Collect metrics
+	metrics, err := registry.Gather()
+	if err != nil {
+		s.logger.Error("Failed to gather metrics from collector",
+			"target", targetConfig.Target,
+			"port", targetConfig.Port,
+			"error", err)
+		collector.IperfErrors.Inc()
+		return
+	}
+
+	s.metricsCache.Update(fmt.Sprintf("%v:%v:%v", targetConfig.Target, targetConfig.Port, targetConfig.Protocol), metrics)
+
+	duration := time.Since(start).Seconds()
+	collector.IperfDuration.Observe(duration)
+
+	s.logger.Debug("Target collector executed",
+		"target", targetConfig.Target,
+		"port", targetConfig.Port,
+		"duration_seconds", duration,
+		"metric_count", len(metrics))
 }
 
 // probeHandler handles requests to the /probe endpoint.
@@ -153,21 +269,20 @@ func (s *Server) probeHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	var udpMode bool
+	protocol := "tcp" 
 
-	udpModeParam := r.URL.Query().Get("udp_mode")
-	if udpModeParam != "" {
-		var err error
+	protocolParam := r.URL.Query().Get("protocol")
+	if protocolParam != "" {
 
-		udpMode, err = strconv.ParseBool(udpModeParam)
-		if err != nil {
-			http.Error(w, fmt.Sprintf("'udp_mode' parameter must be true or false (boolean): %s", err), http.StatusBadRequest)
+		if protocolParam != "tcp" && protocolParam != "udp" {
+			http.Error(w, "'protocol' parameter must be 'tcp' or 'udp' (string)", http.StatusBadRequest)
 			collector.IperfErrors.Inc()
 
 			return
 		}
+		protocol = protocolParam
 	}
-
+	
 	bitrate := r.URL.Query().Get("bitrate")
 	if bitrate != "" && !iperf.ValidateBitrate(bitrate) {
 		http.Error(w, "bitrate must provided as #[KMG][/#], target bitrate in bits/sec (0 for unlimited), (default 1 Mbit/sec for UDP, unlimited for TCP) (optional slash and packet count for burst mode)", http.StatusBadRequest)
@@ -177,9 +292,9 @@ func (s *Server) probeHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Note: In UDP mode, iperf3 requires a bitrate (defaults to 1Mbps if not specified)
-	// Add a log message for clarity if udpMode is enabled but no bitrate specified
-	if udpMode && bitrate == "" {
-		s.logger.Info("UDP mode is enabled but no bitrate specified - iperf3 will use the default of 1Mbps")
+	// Add a log message for clarity if using UDP but no bitrate specified
+	if protocol == "udp" && bitrate == "" {
+		s.logger.Info("Using UDP protocol but no bitrate specified - iperf3 will use the default of 1Mbps")
 	}
 
 	var runPeriod time.Duration
@@ -254,18 +369,18 @@ func (s *Server) probeHandler(w http.ResponseWriter, r *http.Request) {
 	registry := prometheus.NewRegistry()
 
 	// Create collector with probe configuration
-	probeConfig := collector.ProbeConfig{
+	targetConfig := collector.TargetConfig{
 		Target:      target,
 		Port:        targetPort,
 		Period:      runPeriod,
 		Timeout:     runTimeout,
 		ReverseMode: reverseMode,
-		UDPMode:     udpMode,
+		Protocol:    protocol,
 		Bitrate:     bitrate,
 		Bind:        bind,
 	}
 
-	c := collector.NewCollector(probeConfig, s.logger)
+	c := collector.NewCollector(targetConfig, s.logger)
 	registry.MustRegister(c)
 
 	// Delegate http serving to Prometheus client library, which will call collector.Collect.
@@ -280,23 +395,23 @@ func (s *Server) probeHandler(w http.ResponseWriter, r *http.Request) {
 func (s *Server) indexHandler(w http.ResponseWriter, r *http.Request) {
 	if r.URL.Path != "/" {
 		http.NotFound(w, r)
-
 		return
 	}
 
-	// Get landing page configuration from config
-	landingConfig := s.config.GetLandingConfig()
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 
-	// Create and serve the landing page
-	landingPage, err := web.NewLandingPage(landingConfig)
-	if err != nil {
+	content := fmt.Sprintf(LandingPageTemplate,
+		s.config.MetricsPath,
+		version.Info(),
+		s.config.ProbePath,
+		s.config.ProbePath,
+		s.config.ProbePath,
+	)
+
+	if _, err := w.Write([]byte(content)); err != nil {
 		s.logger.Warn("Failed to create landing page", "err", err)
 		http.Error(w, "Internal server error", http.StatusInternalServerError)
-
-		return
 	}
-
-	landingPage.ServeHTTP(w, r)
 }
 
 // healthHandler handles requests to the /health endpoint.
@@ -355,3 +470,4 @@ func (rw *responseWriter) WriteHeader(code int) {
 	rw.statusCode = code
 	rw.ResponseWriter.WriteHeader(code)
 }
+

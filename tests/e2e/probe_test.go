@@ -1,4 +1,4 @@
-// Copyright 2019 Edgard Castro
+// Copyright 2026 Yuval Dekel
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -27,8 +27,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/edgard/iperf3_exporter/internal/collector"
-	"github.com/edgard/iperf3_exporter/internal/iperf"
+	"github.com/yuvaldekel/iperf3_exporter/internal/collector"
+	"github.com/yuvaldekel/iperf3_exporter/internal/iperf"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
@@ -56,6 +56,7 @@ func TestProbeEndpoint(t *testing.T) {
 			ReceivedBytes:         5242880,
 			ReceivedBitsPerSecond: 8388608,
 			Retransmits:           0,
+			Protocol: 			   "tcp",
 		},
 	}
 
@@ -81,6 +82,20 @@ func TestProbeEndpoint(t *testing.T) {
 
 		if targetPort == 0 {
 			targetPort = 5201
+		}
+
+		protocol := "tcp" 
+
+		protocolParam := r.URL.Query().Get("protocol")
+		if protocolParam != "" {
+
+			if protocolParam != "tcp" && protocolParam != "udp" {
+				http.Error(w, "'protocol' parameter must be 'tcp' or 'udp' (string)", http.StatusBadRequest)
+				collector.IperfErrors.Inc()
+
+				return
+			}
+			protocol = protocolParam
 		}
 
 		var reverseMode bool
@@ -119,7 +134,7 @@ func TestProbeEndpoint(t *testing.T) {
 
 		// Create a collector with the mock runner
 		registry := prometheus.NewRegistry()
-		probeConfig := collector.ProbeConfig{
+		TargetConfig := collector.TargetConfig{
 			Target:      target,
 			Port:        targetPort,
 			Period:      runPeriod,
@@ -127,8 +142,9 @@ func TestProbeEndpoint(t *testing.T) {
 			ReverseMode: reverseMode,
 			Bitrate:     bitrate,
 			Bind:        bind,
+			Protocol:    protocol,
 		}
-		c := collector.NewCollectorWithRunner(probeConfig, slog.Default(), mockRunner)
+		c := collector.NewCollectorWithRunner(TargetConfig, slog.Default(), mockRunner)
 		registry.MustRegister(c)
 
 		// Serve metrics
@@ -322,8 +338,9 @@ func TestProbeEndpoint(t *testing.T) {
 		// Create a mock runner that returns a failure
 		failedRunner := &MockRunner{
 			Result: iperf.Result{
-				Success: false,
-				Error:   fmt.Errorf("iperf3 test failed"),
+				Success:  false,
+				Protocol: "tcp",
+				Error:    fmt.Errorf("iperf3 test failed"),
 			},
 		}
 
@@ -336,13 +353,13 @@ func TestProbeEndpoint(t *testing.T) {
 			}
 
 			registry := prometheus.NewRegistry()
-			probeConfig := collector.ProbeConfig{
+			TargetConfig := collector.TargetConfig{
 				Target:  target,
 				Port:    5201,
 				Period:  5 * time.Second,
 				Timeout: 30 * time.Second,
 			}
-			c := collector.NewCollectorWithRunner(probeConfig, slog.Default(), failedRunner)
+			c := collector.NewCollectorWithRunner(TargetConfig, slog.Default(), failedRunner)
 			registry.MustRegister(c)
 
 			h := promhttp.HandlerFor(registry, promhttp.HandlerOpts{})

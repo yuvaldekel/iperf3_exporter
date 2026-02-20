@@ -1,4 +1,4 @@
-// Copyright 2019 Edgard Castro
+// Copyright 2026 Yuval Dekel
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -21,7 +21,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/edgard/iperf3_exporter/internal/iperf"
+	"github.com/yuvaldekel/iperf3_exporter/internal/iperf"
 	"github.com/prometheus/client_golang/prometheus"
 )
 
@@ -45,31 +45,32 @@ var (
 	)
 )
 
-// ProbeConfig represents the configuration for a single probe.
-type ProbeConfig struct {
-	Target      string
-	Port        int
-	Period      time.Duration
-	Timeout     time.Duration
-	ReverseMode bool
-	UDPMode     bool
-	Bitrate     string
-	Bind        string
+// TargetConfig represents the configuration for a single probe.
+type TargetConfig struct {
+    Target      string          `yaml:"target"      validate:"required,hostname|ip"`
+    Port        int             `yaml:"port"        validate:"required,min=1,max=65535"`
+    Period      time.Duration   `yaml:"period"      validate:"required,gt=0"`
+    Timeout     time.Duration   `yaml:"timeout"     validate:"required,gt=0"`
+    ReverseMode bool            `yaml:"reverseMode"`
+    Protocol    string          `yaml:"protocol"    validate:"required,oneof=tcp udp"`
+    Bitrate     string          `yaml:"bitrate"     validate:"bitrate"` 
+    Bind        string          `yaml:"bind"`
+    Interval    time.Duration   `yaml:"interval"    validate:"gt=0"`
 }
 
 // Collector implements the prometheus.Collector interface for iperf3 metrics.
 type Collector struct {
-	target  string
-	port    int
-	period  time.Duration
-	timeout time.Duration
-	mutex   sync.RWMutex
-	reverse bool
-	udpMode bool
-	bitrate string
-	bind    string
-	logger  *slog.Logger
-	runner  iperf.Runner
+	target   string
+	port     int
+	period   time.Duration
+	timeout  time.Duration
+	mutex    sync.RWMutex
+	reverse  bool
+	protocol string
+	bitrate  string
+	bind     string
+	logger   *slog.Logger
+	runner   iperf.Runner
 
 	// Metrics
 	up              *prometheus.Desc
@@ -91,26 +92,26 @@ type Collector struct {
 }
 
 // NewCollector creates a new Collector for iperf3 metrics.
-func NewCollector(config ProbeConfig, logger *slog.Logger) *Collector {
+func NewCollector(config TargetConfig, logger *slog.Logger) *Collector {
 	return NewCollectorWithRunner(config, logger, iperf.NewRunner(logger))
 }
 
 // NewCollectorWithRunner creates a new Collector for iperf3 metrics with a custom runner.
-func NewCollectorWithRunner(config ProbeConfig, logger *slog.Logger, runner iperf.Runner) *Collector {
+func NewCollectorWithRunner(config TargetConfig, logger *slog.Logger, runner iperf.Runner) *Collector {
 	// Common labels for all metrics
-	labels := []string{"target", "port"}
+	labels := []string{"target", "port", "protocol", "reverse"}
 
 	return &Collector{
-		target:  config.Target,
-		port:    config.Port,
-		period:  config.Period,
-		timeout: config.Timeout,
-		reverse: config.ReverseMode,
-		udpMode: config.UDPMode,
-		bitrate: config.Bitrate,
-		bind:    config.Bind,
-		logger:  logger,
-		runner:  runner,
+		target:   config.Target,
+		port:     config.Port,
+		period:   config.Period,
+		timeout:  config.Timeout,
+		reverse:  config.ReverseMode,
+		protocol: config.Protocol,
+		bitrate:  config.Bitrate,
+		bind:     config.Bind,
+		logger:   logger,
+		runner:   runner,
 
 		// Define metrics with labels
 		up: prometheus.NewDesc(
@@ -152,7 +153,7 @@ func NewCollectorWithRunner(config ProbeConfig, logger *slog.Logger, runner iper
 		),
 		sentJitter: prometheus.NewDesc(
 			prometheus.BuildFQName(namespace, "", "sent_jitter_ms"),
-			"Jitter in milliseconds for sent packets in UDP mode.",
+			"Jitter in milliseconds for sent packets in UDP.",
 			labels, nil,
 		),
 		sentLostPackets: prometheus.NewDesc(
@@ -172,7 +173,7 @@ func NewCollectorWithRunner(config ProbeConfig, logger *slog.Logger, runner iper
 		),
 		recvJitter: prometheus.NewDesc(
 			prometheus.BuildFQName(namespace, "", "received_jitter_ms"),
-			"Jitter in milliseconds for received packets in UDP mode.",
+			"Jitter in milliseconds for received packets in UDP.",
 			labels, nil,
 		),
 		recvLostPackets: prometheus.NewDesc(
@@ -226,15 +227,20 @@ func (c *Collector) Collect(ch chan<- prometheus.Metric) {
 		Period:      c.period,
 		Timeout:     c.timeout,
 		ReverseMode: c.reverse,
-		UDPMode:     c.udpMode,
+		Protocol:    c.protocol,
 		Bitrate:     c.bitrate,
 		Bind:        c.bind,
-		Logger:      c.logger,
+		Logger:		 c.logger,
 	})
 
 	// Common label values for all metrics
-	labelValues := []string{c.target, strconv.Itoa(c.port)}
-
+	labelValues := []string{
+		c.target, 
+		strconv.Itoa(c.port), 
+		c.protocol, 
+		strconv.FormatBool(c.reverse),
+	}
+	
 	// Set metrics based on result
 	if result.Success {
 		ch <- prometheus.MustNewConstMetric(c.up, prometheus.GaugeValue, 1, labelValues...)
@@ -243,13 +249,14 @@ func (c *Collector) Collect(ch chan<- prometheus.Metric) {
 		ch <- prometheus.MustNewConstMetric(c.receivedSeconds, prometheus.GaugeValue, result.ReceivedSeconds, labelValues...)
 		ch <- prometheus.MustNewConstMetric(c.receivedBytes, prometheus.GaugeValue, result.ReceivedBytes, labelValues...)
 
-		// Retransmits is only relevant in TCP mode
-		if !result.UDPMode {
+
+		// Retransmits is only relevant in TCP protocol
+		if result.Protocol == "tcp" {
 			ch <- prometheus.MustNewConstMetric(c.retransmits, prometheus.GaugeValue, result.Retransmits, labelValues...)
 		}
 
-		// Include UDP-specific metrics when in UDP mode
-		if result.UDPMode {
+		// Include UDP-specific metrics when in UDP protocol
+		if result.Protocol == "udp" {
 			ch <- prometheus.MustNewConstMetric(c.sentPackets, prometheus.GaugeValue, result.SentPackets, labelValues...)
 			ch <- prometheus.MustNewConstMetric(c.sentJitter, prometheus.GaugeValue, result.SentJitter, labelValues...)
 			ch <- prometheus.MustNewConstMetric(c.sentLostPackets, prometheus.GaugeValue, result.SentLostPackets, labelValues...)
@@ -267,11 +274,12 @@ func (c *Collector) Collect(ch chan<- prometheus.Metric) {
 		ch <- prometheus.MustNewConstMetric(c.receivedSeconds, prometheus.GaugeValue, 0, labelValues...)
 		ch <- prometheus.MustNewConstMetric(c.receivedBytes, prometheus.GaugeValue, 0, labelValues...)
 
-		// Only include mode-specific metrics for the active mode
-		if !result.UDPMode {
+		// Only include TCP-specific metrics for the active mode
+		if result.Protocol == "tcp" {
 			// TCP-specific metrics on failure
 			ch <- prometheus.MustNewConstMetric(c.retransmits, prometheus.GaugeValue, 0, labelValues...)
-		} else {
+		}
+		if result.Protocol == "udp" {
 			// UDP-specific metrics on failure
 			ch <- prometheus.MustNewConstMetric(c.sentPackets, prometheus.GaugeValue, 0, labelValues...)
 			ch <- prometheus.MustNewConstMetric(c.sentJitter, prometheus.GaugeValue, 0, labelValues...)

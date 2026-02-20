@@ -1,8 +1,9 @@
-name: Release
+name: Tag
 
 on:
   push:
-    branches: [main]
+    tags:
+      - 'v[0-9]*.[0-9]*.[0-9]*-beta'
 
 permissions:
   contents: write
@@ -14,20 +15,7 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  release-please:
-    runs-on: ubuntu-latest
-    outputs:
-      release_created: ${{ steps.release.outputs.release_created }}
-      tag_name: ${{ steps.release.outputs.tag_name }}
-    steps:
-      - uses: googleapis/release-please-action@v4
-        id: release
-        with:
-          token: ${{ secrets.RELEASE_PLEASE_TOKEN }}
-
   goreleaser:
-    needs: release-please
-    if: ${{ needs.release-please.outputs.release_created }}
     runs-on: ubuntu-latest
     permissions:
       contents: write
