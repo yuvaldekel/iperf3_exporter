@@ -18,10 +18,13 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
+	"os"
+	"os/signal"
 	"net/http"
 	_ "net/http/pprof"
 	"strconv"
 	"sync"
+	"syscall"
 	"time"
 
 	"github.com/yuvaldekel/iperf3_exporter/internal/collector"
@@ -62,6 +65,9 @@ func New(cfg *config.Config) *Server {
 
 // Start starts the HTTP server.
 func (s *Server) Start() error {
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer stop()
+
 	var wg sync.WaitGroup
 
 	// Register version and process collectors
@@ -98,7 +104,7 @@ func (s *Server) Start() error {
 	mux.HandleFunc("/debug/pprof/heap", http.DefaultServeMux.ServeHTTP)
 
 	// Start target collectors in the background
-	go s.runTargetCollectors()
+	go s.runTargetCollectors(ctx, wg)
 
 	// Create HTTP server
 	s.server = &http.Server{
@@ -149,9 +155,9 @@ func (s *Server) runTargetCollectors(ctx context.Context, wg *sync.WaitGroup) {
 	for _, targetConfig := range s.config.Targets {
 		wg.Add(1)
 
-		go func(cfg TargetConfig) {
+		go func(targetConfig collector.TargetConfig) {
 			defer wg.Done()
-			s.runTargetCollector(ctx, cfg)
+			s.runTargetCollector(ctx, targetConfig)
 		}(targetConfig)
 	}
 }
