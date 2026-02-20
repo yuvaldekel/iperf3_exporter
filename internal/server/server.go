@@ -104,7 +104,7 @@ func (s *Server) Start() error {
 	mux.HandleFunc("/debug/pprof/heap", http.DefaultServeMux.ServeHTTP)
 
 	// Start target collectors in the background
-	go s.runTargetCollectors(ctx, wg)
+	go s.runTargetCollectors(ctx, *wg)
 
 	// Create HTTP server
 	s.server = &http.Server{
