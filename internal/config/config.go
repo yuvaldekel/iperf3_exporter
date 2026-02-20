@@ -34,7 +34,7 @@ type configFile struct {
 	listenAddress string 		  		   `yaml:"listenAddress" json:"listen_address"`
 	metricsPath   string		  		   `yaml:"metricsPath" json:"metrics_path"`
 	probePath     string		  		   `yaml:"probePath" json:"probe_path"`
-	tlsSCrt		  string				   `yaml:"tlsCrt" json:"tls_crt"`
+	tlsCrt		  string				   `yaml:"tlsCrt" json:"tls_crt"`
 	tlsKey  	  string				   `yaml:"tlsKey" json:"tls_key"`
     interval      time.Duration   		   `yaml:"interval" json:"interval" validate:"gt=0"`
 	timeout       time.Duration	  		   `yaml:"timeout" json:"timeout"`
@@ -99,14 +99,12 @@ func newConfig() *configFile {
 func LoadConfig() *Config {
 	configFile := newConfig()
 
-	configFilePath, argsConfig := parseFlags(configFile)
+	configFilePath, argsConfig := parseFlags()
 
 	// Load configuration from file if specified
 	if err := loadConfigFromFile(configFilePath, configFile, argsConfig); err != nil {
 		log.Fatalf("Error loading configuration from file %s: %v", *configFilePath, err)
 	}
-		
-	parseFlags(configFile)
 
 	// Initialize logger
 	var logLevelSlog slog.Level
@@ -220,10 +218,10 @@ func loadConfigFromFile(path string, cfg *configFile, argsCfg *argsConfig) error
 		cfg.metricsPath = argsCfg.metricsPath
 	}
 	if argsCfg.loggingFormat != "" {
-		cfg.logger.format = argsCfg.loggingFormat
+		cfg.logging.format = argsCfg.loggingFormat
 	}
 	if argsCfg.loggingLevel != 0 {
-		cfg.Logger.level = argsCfg.loggingLevel
+		cfg.logging.level = argsCfg.loggingLevel
 	}
 
 	for i := range cfg.Targets {
