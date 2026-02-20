@@ -67,8 +67,9 @@ jobs:
       - name: PR Agent Action
         uses: qodo-ai/pr-agent@main
         env:
-          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-          CONFIG__MODEL: "gemini/gemini-1.5-flash"
+          config.model: "gemini/gemini-1.5-flash"
+          config.fallback_models: '["gemini/gemini-1.5-flash"]'
+          GOOGLE_AI_STUDIO.GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           GITHUB_TOKEN: ${{ secrets.RELEASE_PLEASE_TOKEN }}
           PR_REVIEWER.EXTRA_INSTRUCTIONS: "Focus on security code ceonvention best practice code structure and logic errors."
           GITHUB_ACTION_CONFIG.AUTO_REVIEW: true
