@@ -103,7 +103,7 @@ func LoadConfig() *Config {
 
 	// Load configuration from file if specified
 	if err := loadConfigFromFile(configFilePath, configFile, argsConfig); err != nil {
-		log.Fatalf("Error loading configuration from file %s: %v", *configFilePath, err)
+		log.Fatalf("Error loading configuration from file %s: %v", &configFilePath, err)
 	}
 
 	// Initialize logger
@@ -220,25 +220,25 @@ func loadConfigFromFile(path string, cfg *configFile, argsCfg *argsConfig) error
 	if argsCfg.loggingFormat != "" {
 		cfg.logging.format = argsCfg.loggingFormat
 	}
-	if argsCfg.loggingLevel != 0 {
+	if argsCfg.loggingLevel != "" {
 		cfg.logging.level = argsCfg.loggingLevel
 	}
 
 	for i := range cfg.Targets {
-        if cfg.Targets[i].Port == 0 {
-            cfg.Targets[i].Port = 5201
+        if cfg.targets[i].Port == 0 {
+            cfg.targets[i].Port = 5201
         }
-        if cfg.Targets[i].Protocol == "" {
-            cfg.Targets[i].Protocol = "tcp"
+        if cfg.targets[i].Protocol == "" {
+            cfg.targets[i].Protocol = "tcp"
         }
-        if cfg.Targets[i].Period == 0 {
-            cfg.Targets[i].Period = 5 * time.Second
+        if cfg.targets[i].Period == 0 {
+            cfg.targets[i].Period = 5 * time.Second
         }
-        if cfg.Targets[i].Interval == 0 {
-            cfg.Targets[i].Interval = cfg.Interval
+        if cfg.targets[i].Interval == 0 {
+            cfg.targets[i].Interval = cfg.interval
         }
         if cfg.Targets[i].Timeout == 0 {
-            cfg.Targets[i].Timeout = cfg.Timeout
+            cfg.Targets[i].Timeout = cfg.timeout
         }
 	}
 
