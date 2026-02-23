@@ -1,4 +1,4 @@
-listenAddress: 8080
+listenAddress: 9579
 metricsPath: /metrics
 probePath: /probe
 timeout: 30s
