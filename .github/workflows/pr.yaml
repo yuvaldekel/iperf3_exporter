@@ -9,6 +9,7 @@ on:
       - "stable/v*.*.*"
       - "staging/v*.*.*"
 
+jobs:
   push_pr_to_registry:
     name: Build docker image
     runs-on: ubuntu-latest
