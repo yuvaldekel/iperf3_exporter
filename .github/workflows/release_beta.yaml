@@ -1,0 +1,88 @@
+name: beta release
+
+on:
+  push:
+    branches:
+      - "beta/v[0-9]+.[0-9]+.[0-9]+"
+
+permissions:
+  contents: write
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: go.mod
+          cache: true
+      - run: go mod tidy && git diff --exit-code go.mod go.sum
+      - uses: golangci/golangci-lint-action@v9
+        with:
+          version: latest
+
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: go.mod
+          cache: true
+      - run: sudo apt-get update && sudo apt-get install -y iperf3
+      - run: go install golang.org/x/vuln/cmd/govulncheck@latest
+      - run: govulncheck ./...
+      - run: go test -v -race -cover ./...
+
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: go.mod
+          cache: true
+      - run: go build -v ./...
+
+  dependency-review:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/dependency-review-action@v4
+
+  create_release_tag:
+    needs:
+      - lint
+      - build
+      - test
+      - dependency-review
+    name: Create Release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.RELEASE_PLEASE_TOKEN }}
+      - name: Extract branch name
+        shell: bash
+        run: |
+          original_branch=${GITHUB_HEAD_REF:-${GITHUB_REF#refs/heads/}}
+          echo "branch_name=$transformed_branch" >> $GITHUB_OUTPUT
+          tag_name=$(echo "$original_branch" | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+')-beta
+          echo "tag_name=$tag_name" >> $GITHUB_OUTPUT
+        id: extract_branch
+      - uses: actions/setup-go@v5
+        with:
+          go-version: 'stable'
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          target_commitish: ${{ github.sha }}
+          token: ${{ secrets.RELEASE_PLEASE_TOKEN }}
+          tag_name: ${{ steps.extract_branch.outputs.tag_name }}
+          prerelease: true
+          make_latest: false
+          draft: false
+          generate_release_notes: true
+          name: ${{ steps.extract_branch.outputs.tag_name }}

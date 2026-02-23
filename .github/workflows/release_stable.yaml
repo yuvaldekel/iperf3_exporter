@@ -1,20 +1,12 @@
-name: CI
+name: stable release
 
 on:
   push:
     branches:
-      - '*'
-      - '!main'
-  pull_request:
-    branches: [main]
+      - "stable/v[0-9]+.[0-9]+.[0-9]+"
 
 permissions:
-  contents: read
-  pull-requests: write
-
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+  contents: write
 
 jobs:
   lint:
@@ -54,28 +46,43 @@ jobs:
       - run: go build -v ./...
 
   dependency-review:
-    if: github.event_name == 'pull_request' && github.base_ref == 'main'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
       - uses: actions/dependency-review-action@v4
 
-  code-review:
+  create_release_tag:
     needs:
       - lint
       - build
       - test
-    if: github.event_name == 'pull_request' && github.base_ref == 'main'
+      - dependency-review
+    name: Create Release
     runs-on: ubuntu-latest
     steps:
-      - name: PR Agent Action
-        uses: qodo-ai/pr-agent@main
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          CONFIG__MODEL: "gemini/gemini-3-pro-preview"
-          CONFIG__FALLBACK_MODELS: '["gemini/gemini-2.5-flash"]'
-          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-          OPENAI_KEY: ${{ secrets.OPENAI_API_KEY }}
-          GITHUB_ACTION_CONFIG__AUTO_REVIEW: "true"
-          PR_REVIEWER__EXTRA_INSTRUCTIONS: "Focus on security code ceonvention best practice code structure and logic errors."
-          GITHUB_ACTION_CONFIG__PR_ACTIONS: "['opened', 'reopened', 'synchronize']"
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.RELEASE_PLEASE_TOKEN }}
+      - name: Extract branch name
+        shell: bash
+        run: |
+          original_branch=${GITHUB_HEAD_REF:-${GITHUB_REF#refs/heads/}}
+          echo "branch_name=$transformed_branch" >> $GITHUB_OUTPUT
+          tag_name=$(echo "$original_branch" | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+')-stable
+          echo "tag_name=$tag_name" >> $GITHUB_OUTPUT
+        id: extract_branch
+      - uses: actions/setup-go@v5
+        with:
+          go-version: 'stable'
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          target_commitish: ${{ github.sha }}
+          token: ${{ secrets.RELEASE_PLEASE_TOKEN }}
+          tag_name: ${{ steps.extract_branch.outputs.tag_name }}
+          prerelease: false
+          make_latest: true
+          draft: false
+          generate_release_notes: true
+          name: ${{ steps.extract_branch.outputs.tag_name }}
