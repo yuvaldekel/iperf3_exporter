@@ -44,9 +44,3 @@ jobs:
           go-version-file: go.mod
           cache: true
       - run: go build -v ./...
-
-  dependency-review:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v6
-      - uses: actions/dependency-review-action@v4

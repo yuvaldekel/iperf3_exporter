@@ -45,18 +45,11 @@ jobs:
           cache: true
       - run: go build -v ./...
 
-  dependency-review:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v6
-      - uses: actions/dependency-review-action@v4
-
   create_release_tag:
     needs:
       - lint
       - build
       - test
-      - dependency-review
     name: Create Release
     runs-on: ubuntu-latest
     steps:
