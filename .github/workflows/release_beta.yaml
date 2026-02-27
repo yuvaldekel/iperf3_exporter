@@ -65,6 +65,10 @@ jobs:
           tag_name=$(echo "$original_branch" | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+')-beta
           echo "tag_name=$tag_name" >> $GITHUB_OUTPUT
         id: extract_branch
+      - name: Force update tag
+        run: |
+          git tag -f ${{ steps.extract_branch.outputs.tag_name }} ${{ github.sha }}
+          git push origin -f ${{ steps.extract_branch.outputs.tag_name }}
       - uses: actions/setup-go@v5
         with:
           go-version: 'stable'
