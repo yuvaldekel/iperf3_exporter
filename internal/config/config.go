@@ -171,7 +171,7 @@ func parseFlags() (string, *argsConfig){
 
 	kingpin.Flag("iperf3-timeout", "Timeout for each iperf3 run, in seconds.").
 	    Envar("IPERF3_EXPORTER_TIMEOUT").
-		Default("").DurationVar(&argsConfig.timeout)
+		Default(0).DurationVar(&argsConfig.timeout)
 
 	kingpin.Flag("log-level", "Only log messages with the given severity or above. One of: [debug, info, warn, error]").
         Envar("IPERF3_EXPORTER_LOG_LEVEL").
