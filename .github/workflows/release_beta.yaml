@@ -71,7 +71,6 @@ jobs:
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
-          target_commitish: ${{ github.sha }}
           token: ${{ secrets.RELEASE_PLEASE_TOKEN }}
           tag_name: ${{ steps.extract_branch.outputs.tag_name }}
           prerelease: true
@@ -79,4 +78,4 @@ jobs:
           draft: false
           generate_release_notes: true
           name: ${{ steps.extract_branch.outputs.tag_name }}
-  
+          append_body: false
