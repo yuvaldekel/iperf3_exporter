@@ -64,20 +64,20 @@ jobs:
               | ($version_split[1:] | join("-")) as $suffix
               | ($version_parts | "\(.[0]).\(.[1])") as $major_minor
               | ($version_parts[0]) as $major
-              | "ghcr.io/yuvaldekel/perf3_exporter:\($major_minor)-\($suffix)",
-                "ghcr.io/yuvaldekel/perf3_exporter:\($major)-\($suffix)"
+              | "ghcr.io/yuvaldekel/iperf3_exporter:\($major_minor)-\($suffix)",
+                "ghcr.io/yuvaldekel/iperf3_exporter:\($major)-\($suffix)"
             ] |
             # Add suffix-only tags for beta (only if tag ends with -beta)
             if any(.tags[]; split(":")[-1] | endswith("-beta")) then
               .tags += [
-                "ghcr.io/yuvaldekel/perf3_exporter:beta"
+                "ghcr.io/yuvaldekel/iperf3_exporter:beta"
               ]
             else . end |
             # Add suffix-only tags for stable (and latest) (only if tag ends with -stable)
             if any(.tags[]; split(":")[-1] | endswith("-stable")) then
               .tags += [
-                "ghcr.io/yuvaldekel/perf3_exporter:stable",
-                "ghcr.io/yuvaldekel/perf3_exporter:latest"
+                "ghcr.io/yuvaldekel/iperf3_exporter:stable",
+                "ghcr.io/yuvaldekel/iperf3_exporter:latest"
               ]
             else . end
           ')
