@@ -10,6 +10,12 @@ on:
       - "staging/v*.*.*"
 
 jobs:
+  dependency-review:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/dependency-review-action@v4
+
   push_pr_to_registry:
     name: Build docker image
     runs-on: ubuntu-latest
