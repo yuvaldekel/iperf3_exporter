@@ -221,6 +221,7 @@ func (s *Server) executeTargetCollector(targetConfig collector.TargetConfig, reg
 	s.logger.Debug("Target collector executed",
 		"target", targetConfig.Target,
 		"port", targetConfig.Port,
+		"protocol", targetConfig.Protocol,
 		"duration_seconds", duration,
 		"metric_count", len(metrics))
 }
