@@ -7,9 +7,6 @@ logging:
   level: info
   format: logfmt
 
-tlsCrt: server.crt
-tlsKey: server.key
-
 targets:
   - target: www.example.com
     port: 5201
