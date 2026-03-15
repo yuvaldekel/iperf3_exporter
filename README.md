@@ -60,7 +60,7 @@ chmod +x iperf3_exporter
 ### Using Docker
 
 ```bash
-docker run --rm -d -p 9579:9579 -v config.yaml:/exporter/config.yaml --name iperf3_exporter ghcr.io/yuvaldekel/iperf3_exporter:latest
+docker run --rm -d -p 9579:9579 -v ./config.yaml:/exporter/config.yaml --name iperf3_exporter ghcr.io/yuvaldekel/iperf3_exporter:latest
 ```
 
 The Docker images are available for multiple architectures (amd64, arm64) and are published to GitHub Container Registry.
@@ -108,7 +108,7 @@ The exporter supports a configuration file for TLS and authentication settings. 
 Example configuration file:
 
 ```yaml
-listenAddress: 8080
+listenAddress: 9579
 metricsPath: /metrics
 probePath: /probe
 timeout: 30s

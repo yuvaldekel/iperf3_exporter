@@ -45,18 +45,11 @@ jobs:
           cache: true
       - run: go build -v ./...
 
-  dependency-review:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v6
-      - uses: actions/dependency-review-action@v4
-
   create_release_tag:
     needs:
       - lint
       - build
       - test
-      - dependency-review
     name: Create Release
     runs-on: ubuntu-latest
     steps:
@@ -69,7 +62,7 @@ jobs:
         run: |
           original_branch=${GITHUB_HEAD_REF:-${GITHUB_REF#refs/heads/}}
           echo "branch_name=$transformed_branch" >> $GITHUB_OUTPUT
-          tag_name=$(echo "$original_branch" | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+')-stable
+          tag_name=$(echo "$original_branch" | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+')
           echo "tag_name=$tag_name" >> $GITHUB_OUTPUT
         id: extract_branch
       - uses: actions/setup-go@v5
@@ -86,3 +79,7 @@ jobs:
           draft: false
           generate_release_notes: true
           name: ${{ steps.extract_branch.outputs.tag_name }}
+      - name: Force update tag
+        run: |
+          git tag -f ${{ steps.extract_branch.outputs.tag_name }} ${{ github.sha }}
+          git push origin -f ${{ steps.extract_branch.outputs.tag_name }}

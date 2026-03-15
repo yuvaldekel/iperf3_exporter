@@ -56,28 +56,35 @@ jobs:
             # Find all version tags with suffix (X.Y.Z-suffix) and add major.minor and major tags
             .tags += [
               .tags[] 
-              | select(test(":[0-9]+\\.[0-9]+\\.[0-9]+-"))
+              | select(test(":[0-9]+\\.[0-9]+\\.[0-9]+"))
               | split(":")
               | .[-1] as $version
               | ($version | split("-")) as $version_split
               | ($version_split[0] | split(".")) as $version_parts
-              | ($version_split[1:] | join("-")) as $suffix
               | ($version_parts | "\(.[0]).\(.[1])") as $major_minor
               | ($version_parts[0]) as $major
-              | "ghcr.io/yuvaldekel/perf3_exporter:\($major_minor)-\($suffix)",
-                "ghcr.io/yuvaldekel/perf3_exporter:\($major)-\($suffix)"
+              | if ($version_split | length) > 1 then
+                  # It has a suffix (e.g., -beta), so append it
+                  ($version_split[1:] | join("-")) as $suffix |
+                  "ghcr.io/yuvaldekel/iperf3_exporter:\($major_minor)-\($suffix)",
+                  "ghcr.io/yuvaldekel/iperf3_exporter:\($major)-\($suffix)"
+                else
+                  # It is a clean stable tag, no suffix needed
+                  "ghcr.io/yuvaldekel/iperf3_exporter:\($major_minor)",
+                  "ghcr.io/yuvaldekel/iperf3_exporter:\($major)"
+                end              
             ] |
             # Add suffix-only tags for beta (only if tag ends with -beta)
             if any(.tags[]; split(":")[-1] | endswith("-beta")) then
               .tags += [
-                "ghcr.io/yuvaldekel/perf3_exporter:beta"
+                "ghcr.io/yuvaldekel/iperf3_exporter:beta"
               ]
             else . end |
-            # Add suffix-only tags for stable (and latest) (only if tag ends with -stable)
-            if any(.tags[]; split(":")[-1] | endswith("-stable")) then
+            # Add suffix-only tags for stable (and latest) (only if tag has no suffix)
+            if any(.tags[]; test(":[0-9]+\\.[0-9]+\\.[0-9]+$")) then
               .tags += [
-                "ghcr.io/yuvaldekel/perf3_exporter:stable",
-                "ghcr.io/yuvaldekel/perf3_exporter:latest"
+                "ghcr.io/yuvaldekel/iperf3_exporter:stable",
+                "ghcr.io/yuvaldekel/iperf3_exporter:latest"
               ]
             else . end
           ')

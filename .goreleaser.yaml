@@ -4,6 +4,9 @@ before:
   hooks:
     - go mod tidy
 
+release:
+  replace_existing_artifacts: true
+
 builds:
   - main: ./cmd/iperf3_exporter
     env:
@@ -30,9 +33,6 @@ archives:
       - NOTICE
       - README.md
 
-checksum:
-  name_template: 'checksums.txt'
-
 changelog:
   sort: asc
   use: github
@@ -54,6 +54,3 @@ changelog:
       - '^chore:'
       - 'Merge pull request'
       - 'Merge branch'
-
-release:
-  prerelease: auto
