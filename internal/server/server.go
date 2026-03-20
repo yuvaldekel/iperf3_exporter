@@ -22,7 +22,6 @@ import (
 	"os/signal"
 	"net/http"
 	_ "net/http/pprof"
-	"strings"
 	"strconv"
 	"sync"
 	"syscall"
@@ -33,9 +32,10 @@ import (
 	"github.com/yuvaldekel/iperf3_exporter/internal/iperf"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/collectors"
-	"github.com/prometheus/common/version"
 	versioncollector "github.com/prometheus/client_golang/prometheus/collectors/version"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"github.com/prometheus/exporter-toolkit/web"
+
 )
 
 const (
@@ -106,33 +106,18 @@ func (s *Server) Start() error {
 
 	// Start target collectors in the background
 	go s.runTargetCollectors(ctx, &wg)
-	
-	listenAddr := s.config.ListenAddress
-	if !strings.Contains(listenAddr, ":") {
-		listenAddr = ":" + listenAddr
-	}
 
 	// Create HTTP server
 	s.server = &http.Server{
-		Addr:         listenAddr,
 		Handler:      handler,
 		ReadTimeout:  60 * time.Second,
 		WriteTimeout: 60 * time.Second,
 	}
 
-	s.logger.Info("Starting server", "address", s.config.ListenAddress)
-
-	// Check if TLS is configured
-	if s.config.TLSCrt != "" && s.config.TLSKey != "" {
-		s.logger.Info("TLS enabled", "cert", s.config.TLSCrt, "key", s.config.TLSKey)
-		if err := s.server.ListenAndServeTLS(s.config.TLSCrt, s.config.TLSKey); err != nil && err != http.ErrServerClosed {
-			return fmt.Errorf("error starting TLS server: %w", err)
-		}
-	} else {
-		// Start server using standard http library without TLS
-		if err := s.server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			return fmt.Errorf("error starting server: %w", err)
-		}
+	s.logger.Info("Starting server", "address", s.config.WebConfig.WebListenAddresses)
+	// Start server using exporter-toolkit
+	if err := web.ListenAndServe(s.server, s.config.WebConfig, s.logger); err != nil {
+		return fmt.Errorf("error starting server: %w", err)
 	}
 	
 	wg.Wait()
@@ -399,20 +384,19 @@ func (s *Server) indexHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	// Get landing page configuration from config
+	landingConfig := s.config.GetLandingConfig()
 
-	content := fmt.Sprintf(LandingPageTemplate,
-		s.config.MetricsPath,
-		version.Info(),
-		s.config.ProbePath,
-		s.config.ProbePath,
-		s.config.ProbePath,
-	)
-
-	if _, err := w.Write([]byte(content)); err != nil {
+	// Create and serve the landing page
+	landingPage, err := web.NewLandingPage(landingConfig)
+	if err != nil {
 		s.logger.Warn("Failed to create landing page", "err", err)
 		http.Error(w, "Internal server error", http.StatusInternalServerError)
+
+		return
 	}
+
+	landingPage.ServeHTTP(w, r)
 }
 
 // healthHandler handles requests to the /health endpoint.
