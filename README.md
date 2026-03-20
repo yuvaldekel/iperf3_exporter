@@ -93,22 +93,23 @@ iPerf3 exporter is configured via command-line flags:
 
 | Flag | environment variables | Description | Default |
 |------|-----------------------|-------------|---------|
-| `--config` | `IPERF3_EXPORTER_CONFIG_FILE` | Path to configuration file that can enable TLS or authentication | `config.yaml` |
-| `--listen-address` | `IPERF3_EXPORTER_PORT` | Addresses on which to expose metrics and web interface (repeatable) | `9579` |
-| `--mtrics-path` | - | Path under which to expose metrics | `/metrics` |
-| `--probe-path` | - | Path under which to expose the probe endpoint | `/probe` |
-| `--iperf3-timeout` | `IPERF3_EXPORTER_TIMEOUT` | iperf3 run timeout | `30s` |
+| `--config.file` | `IPERF3_EXPORTER_CONFIG_FILE` | Path to configuration file that can enable TLS or authentication | `config.yaml` |
+| `--web.listen-address` | - | Addresses on which to expose metrics and web interface (repeatable) | `9579` |
+| `--web.mtrics-path` | `IPERF3_EXPORTER_TELEMETRY_PATH` | Path under which to expose metrics | `/metrics` |
+| `--web.probe-path` | `IPERF3_EXPORTER_PROBE_PATH` | Path under which to expose the probe endpoint | `/probe` |
+| `--web.config.file` | - | Path to configuration file that can enable TLS or authentication |  |
+| `--web.systemd-socket` | - | Use systemd socket activation listeners instead of port listeners (Linux only) | `false` |
+| `--iperf3.timeout` | `IPERF3_EXPORTER_TIMEOUT` | iperf3 run timeout | `30s` |
 | `--log-level` | `IPERF3_EXPORTER_LOG_LEVEL` | Only log messages with the given severity or above | `info` |
 | `--log-format` | `IPERF3_EXPORTER_LOG_FORMAT` | Output format of log messages | `logfmt` |
 
-#### Web Configuration File
+#### Exporter Configuration File
 
-The exporter supports a configuration file for TLS and authentication settings. This file is specified with the `--config` flag.
+The exporter supports a configuration file for endpoint and logging settings. This file is specified with the `--config` flag.
 
 Example configuration file:
 
 ```yaml
-listenAddress: 9579
 metricsPath: /metrics
 probePath: /probe
 timeout: 30s
@@ -117,8 +118,6 @@ logging:
   level: info
   format: logfmt
 
-tlsCrt: server.crt
-tlsKey: server.key
 
 # List of targets that will be scraped constently
 targets:
@@ -127,6 +126,21 @@ targets:
     interval: 1h
     protocol: tcp
     period: 10s
+```
+
+#### Web Configuration File
+
+The exporter supports a configuration file for TLS and authentication settings. This file is specified with the `--web.config.file` flag.
+
+Example configuration file:
+
+```yaml
+tls_server_config:
+  cert_file: server.crt
+  key_file: server.key
+
+basic_auth_users:
+  username: password
 ```
 
 For more details on the web configuration file format, see the [exporter-toolkit documentation](https://github.com/prometheus/exporter-toolkit/blob/master/docs/web-configuration.md).
