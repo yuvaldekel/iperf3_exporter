@@ -157,10 +157,12 @@ func parseFlags() (string, *argsConfig, *web.FlagConfig){
 		String()
 	
 	kingpin.Flag("web.telemetry-path", "Path under which to expose metrics.").
-		Default("IPERF3_EXPORTER_TELEMETRY_PATH").StringVar(&argsConfig.metricsPath)
+	    Envar("IPERF3_EXPORTER_TELEMETRY_PATH").
+		Default("").StringVar(&argsConfig.metricsPath)
 
 	kingpin.Flag("web.probe-path", "Path under which to expose the probe endpoint.").
-		Default("IPERF3_EXPORTER_PROBE_PATH").StringVar(&argsConfig.probePath)
+	    Envar("IPERF3_EXPORTER_PROBE_PATH").
+		Default("").StringVar(&argsConfig.probePath)
 
 	kingpin.Flag("iperf3.timeout", "Timeout for each iperf3 run, in seconds.").
 	    Envar("IPERF3_EXPORTER_TIMEOUT").
