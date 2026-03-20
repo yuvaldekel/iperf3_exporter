@@ -26,16 +26,19 @@ import (
 	"github.com/yuvaldekel/iperf3_exporter/internal/iperf"
 	"github.com/alecthomas/kingpin/v2"
 	"github.com/prometheus/common/version"
+	"github.com/prometheus/exporter-toolkit/web"
+	webflag "github.com/prometheus/exporter-toolkit/web/kingpinflag"
 	"github.com/go-playground/validator/v10"
+)
+
+const (
+	listenAddress = ":9579"
 )
 
 // Config represents the configuration file for the iperf3_exporter.
 type configFile struct {
-	ListenAddress string 		  		   `yaml:"listenAddress" json:"listen_address"`
 	MetricsPath   string		  		   `yaml:"metricsPath" json:"metrics_path"`
 	ProbePath     string		  		   `yaml:"probePath" json:"probe_path"`
-	TLSCrt		  string				   `yaml:"tlsCrt" json:"tls_crt"`
-	TLSKey  	  string				   `yaml:"tlsKey" json:"tls_key"`
     Interval      time.Duration   		   `yaml:"interval" json:"interval" validate:"gt=0"`
 	Timeout       time.Duration	  		   `yaml:"timeout" json:"timeout"`
 
@@ -49,24 +52,21 @@ type configFile struct {
 }
 
 type argsConfig struct {
-	listenAddress  string 		  
-	metricsPath    string		  	
+	metricsPath    string  	
 	probePath      string
-	timeout        time.Duration	  	
+	timeout        time.Duration
 	loggingLevel   string
 	loggingFormat  string
 }
 
 // Config represents the runtime configuration for the iperf3_exporter.
 type Config struct {
-	ListenAddress string 		  
 	MetricsPath   string		  	
 	ProbePath     string
-	TLSCrt		  string
-	TLSKey  	  string
 	Timeout       time.Duration	  	
 	Targets 	  []collector.TargetConfig 
 	Logger        *slog.Logger
+	WebConfig     *web.FlagConfig
 }
 
 func validateBitrate(fl validator.FieldLevel) bool {
@@ -77,11 +77,8 @@ func validateBitrate(fl validator.FieldLevel) bool {
 // newConfig creates a new Config with default values.
 func newConfig() *configFile {
 	return &configFile{
-		ListenAddress: "9579",
 		MetricsPath:   "/metrics",
 		ProbePath:     "/probe",
-		TLSCrt: 	   "",
-		TLSKey: 	   "",
 		Timeout:       30 * time.Second,
 		Targets: 	  []collector.TargetConfig{},
 		Interval:	  3600 * time.Second,
@@ -99,7 +96,7 @@ func newConfig() *configFile {
 func LoadConfig() *Config {
 	configFile := newConfig()
 
-	configFilePath, argsConfig := parseFlags()
+	configFilePath, argsConfig, webConfig := parseFlags()
 
 	// Load configuration from file if specified
 	if err := loadConfigFromFile(configFilePath, configFile, argsConfig); err != nil {
@@ -132,12 +129,12 @@ func LoadConfig() *Config {
 	logger := slog.New(handler)
 
 	cfg := &Config{
-		ListenAddress: configFile.ListenAddress,
 		MetricsPath:   configFile.MetricsPath,
 		ProbePath:     configFile.ProbePath,
 		Timeout:       configFile.Timeout,
 		Targets: 	   configFile.Targets,
 		Logger:        logger,
+		WebConfig      webConfig,
 	}
 	
 	// Validate configuration
@@ -150,34 +147,33 @@ func LoadConfig() *Config {
 }
 
 // ParseFlags parses the command line flags and returns a Config.
-func parseFlags() (string, *argsConfig){
+func parseFlags() (string, *argsConfig, *web.FlagConfig){
 	argsConfig := new(argsConfig)
 
 	// Define command-line flags
-	configFilePath := kingpin.Flag("config", "Path to the configuration file").
+	configFilePath := kingpin.Flag("config.file", "Path to the configuration file").
         Envar("IPERF3_EXPORTER_CONFIG_FILE").
         Default("config.yaml").
 		String()
 	
-	kingpin.Flag("listen-address", "Port to listen on").
-        Envar("IPERF3_EXPORTER_PORT").
-        Default("").StringVar(&argsConfig.listenAddress)
+	kingpin.Flag("web.telemetry-path", "Path under which to expose metrics.").
+		Default("IPERF3_EXPORTER_TELEMETRY_PATH").StringVar(&argsConfig.metricsPath)
 
-	kingpin.Flag("metrics-path", "Path under which to expose metrics.").
-		Default("").StringVar(&argsConfig.metricsPath)
+	kingpin.Flag("web.probe-path", "Path under which to expose the probe endpoint.").
+		Default("IPERF3_EXPORTER_PROBE_PATH").StringVar(&argsConfig.probePath)
 
-	kingpin.Flag("probe-path", "Path under which to expose the probe endpoint.").
-		Default("").StringVar(&argsConfig.probePath)
-
-	kingpin.Flag("iperf3-timeout", "Timeout for each iperf3 run, in seconds.").
+	kingpin.Flag("iperf3.timeout", "Timeout for each iperf3 run, in seconds.").
 	    Envar("IPERF3_EXPORTER_TIMEOUT").
 		Default("0s").DurationVar(&argsConfig.timeout)
 
-	kingpin.Flag("log-level", "Only log messages with the given severity or above. One of: [debug, info, warn, error]").
+	// Add web configuration flags (TLS, basic auth, etc.)
+	webConfig := webflag.AddFlags(kingpin.CommandLine, listenAddress)
+
+	kingpin.Flag("log.level", "Only log messages with the given severity or above. One of: [debug, info, warn, error]").
         Envar("IPERF3_EXPORTER_LOG_LEVEL").
 		Default("").StringVar(&argsConfig.loggingLevel)
 
-	kingpin.Flag("log-format", "Output format of log messages. One of: [logfmt, json]").
+	kingpin.Flag("log.format", "Output format of log messages. One of: [logfmt, json]").
 		Envar("IPERF3_EXPORTER_LOG_FORMAT").
 		Default("").StringVar(&argsConfig.loggingFormat)
 
@@ -186,7 +182,7 @@ func parseFlags() (string, *argsConfig){
 	kingpin.HelpFlag.Short('h')
 
 	kingpin.Parse()
-	return *configFilePath, argsConfig
+	return *configFilePath, argsConfig, webConfig
 }
 
 // loadConfigFromFile loads the configuration from the specified file path into the provided Config struct.
@@ -205,9 +201,6 @@ func loadConfigFromFile(path string, cfg *configFile, argsCfg *argsConfig) error
 	}
 
 	// load env and args values if set
-	if argsCfg.listenAddress != "" {
-		cfg.ListenAddress = argsCfg.listenAddress
-	}
 	if argsCfg.metricsPath != "" {
 		cfg.MetricsPath = argsCfg.metricsPath
 	}
