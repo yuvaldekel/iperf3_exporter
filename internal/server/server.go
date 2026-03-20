@@ -22,7 +22,6 @@ import (
 	"os/signal"
 	"net/http"
 	_ "net/http/pprof"
-	"strings"
 	"strconv"
 	"sync"
 	"syscall"
@@ -33,7 +32,6 @@ import (
 	"github.com/yuvaldekel/iperf3_exporter/internal/iperf"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/collectors"
-	"github.com/prometheus/common/version"
 	versioncollector "github.com/prometheus/client_golang/prometheus/collectors/version"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/prometheus/exporter-toolkit/web"
@@ -116,7 +114,7 @@ func (s *Server) Start() error {
 		WriteTimeout: 60 * time.Second,
 	}
 
-	s.logger.Info("Starting server", "address", s.config.ListenAddress)
+	s.logger.Info("Starting server", "address", s.config.WebConfig.WebListenAddresses)
 	// Start server using exporter-toolkit
 	if err := web.ListenAndServe(s.server, s.config.WebConfig, s.logger); err != nil {
 		return fmt.Errorf("error starting server: %w", err)
