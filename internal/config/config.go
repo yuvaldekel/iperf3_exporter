@@ -134,7 +134,7 @@ func LoadConfig() *Config {
 		Timeout:       configFile.Timeout,
 		Targets: 	   configFile.Targets,
 		Logger:        logger,
-		WebConfig      webConfig,
+		WebConfig:     webConfig,
 	}
 	
 	// Validate configuration
